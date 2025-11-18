@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Create Job Description - AI Resume Filter{% endblock %}
+
+{% block content %}
+<h2 style="color: white; margin-bottom: 2rem;">💼 Create Job Description</h2>
+
+<div class="card">
+    <form method="POST">
+        <h3 style="margin-bottom: 1.5rem;">New Job Posting</h3>
+        
+        <div class="form-group">
+            <label for="job_title">Job Title *</label>
+            <input type="text" id="job_title" name="job_title" required 
+                   placeholder="e.g., Senior Python Developer">
+        </div>
+        
+        <div class="form-group">
+            <label for="job_description">Job Description *</label>
+            <textarea id="job_description" name="job_description" required 
+                      placeholder="Enter the full job description including:
+- Required skills and technologies
+- Years of experience needed
+- Educational requirements
+- Responsibilities
+- Qualifications and certifications"></textarea>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">
+                💾 Save Job Description
+            </button>
+            <a href="{{ url_for('jobs') }}" class="btn btn-secondary">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="background: #f8f9fa; border: 2px dashed #667eea;">
+    <h4 style="color: #667eea; margin-bottom: 1rem;">💡 Tips for Better Results</h4>
+    <ul style="color: #495057; line-height: 1.8;">
+        <li><strong>Be specific</strong> about required skills and technologies</li>
+        <li><strong>Mention years of experience</strong> required for the role</li>
+        <li><strong>Include must-have vs nice-to-have</strong> qualifications</li>
+        <li><strong>List key responsibilities</strong> to help match relevant experience</li>
+        <li><strong>Add industry-specific keywords</strong> for better matching</li>
+    </ul>
+</div>
+{% endblock %}

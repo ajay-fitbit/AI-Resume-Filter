@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Agent Monitoring - AI Resume Filter{% endblock %}
+
+{% block content %}
+<!-- Add Bootstrap CSS and JS for modal functionality -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<h2 style="color: white; margin-bottom: 2rem;">🤖 Multi-Agent System Monitoring</h2>
+
+<div class="card" style="background: rgba(255, 255, 255, 0.95); margin-bottom: 2rem; padding: 1rem;">
+    <p style="color: #6c757d; margin: 0;">Real-time execution logs and performance metrics for all agents</p>
+</div>
+
+<!-- Agent Status Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="card" style="text-align: center;">
+        <h5 style="color: #667eea; margin-bottom: 0.5rem;">Resume Parser</h5>
+        <p style="color: #28a745; font-size: 1.5rem; margin: 0.5rem 0;">✓ Active</p>
+        <small style="color: #6c757d;">Extracts structured data</small>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <h5 style="color: #667eea; margin-bottom: 0.5rem;">Skills Assessor</h5>
+        <p style="color: #28a745; font-size: 1.5rem; margin: 0.5rem 0;">✓ Active</p>
+        <small style="color: #6c757d;">Evaluates skill matches</small>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <h5 style="color: #667eea; margin-bottom: 0.5rem;">Semantic Matcher</h5>
+        <p style="color: #28a745; font-size: 1.5rem; margin: 0.5rem 0;">✓ Active</p>
+        <small style="color: #6c757d;">AI-powered similarity</small>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <h5 style="color: #667eea; margin-bottom: 0.5rem;">Red Flag Detector</h5>
+        <p style="color: #28a745; font-size: 1.5rem; margin: 0.5rem 0;">✓ Active</p>
+        <small style="color: #6c757d;">Identifies issues</small>
+    </div>
+</div>
+
+<!-- Recent Agent Executions -->
+<div class="card">
+    <h3 style="margin-bottom: 1.5rem;">Recent Agent Executions</h3>
+    <div>
+                {% if executions %}
+                <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Candidate</th>
+                                <th>Workflow Time</th>
+                                <th>Final Score</th>
+                                <th>Agents Executed</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exec in executions %}
+                            <tr>
+                                <td>{{ exec.timestamp }}</td>
+                                <td>{{ exec.candidate_name }}</td>
+                                <td>
+                                    <span style="display: inline-block; padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.875rem; font-weight: 600; background: #17a2b8; color: white;">
+                                        {{ "%.3f"|format(exec.execution_time) }}s
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if exec.score >= 75 %}badge-success
+                                        {% elif exec.score >= 50 %}badge-warning
+                                        {% else %}badge-danger{% endif %}">
+                                        {{ "%.2f"|format(exec.score) }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    <small>
+                                        Parser → Skills → Semantic → RedFlags → Ranking
+                                    </small>
+                                </td>
+                                <td>
+                                    <button class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;"
+                                            onclick="showLogs({{ exec.candidate_id }})">
+                                        View Logs
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                <div class="alert alert-info">
+                    No agent executions yet. Upload a resume to see agent activity.
+                </div>
+                {% endif %}
+            </div>
+</div>
+
+<!-- Agent Architecture Diagram -->
+<div class="card">
+    <h3 style="margin-bottom: 1.5rem;">Multi-Agent Workflow Architecture</h3>
+    <div>
+                <div style="text-align: center;">
+                    <pre style="text-align: left; background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
+┌─────────────────────────────────────────────────────────────┐
+│                  Ranking Orchestrator Agent                  │
+│                  (Coordinates entire workflow)               │
+└───────────────────────┬─────────────────────────────────────┘
+                        │
+        ┌───────────────┴───────────────┐
+        │                               │
+        ▼                               ▼
+┌───────────────┐              ┌──────────────────┐
+│ Resume Parser │              │  Skills Assessor │
+│    Agent      │──────────────│     Agent        │
+└───────┬───────┘              └────────┬─────────┘
+        │                               │
+        │       ┌───────────────┐       │
+        └───────│   Semantic    │───────┘
+                │   Matcher     │
+                │    Agent      │
+                └───────┬───────┘
+                        │
+                        ▼
+                ┌──────────────┐
+                │  Red Flag    │
+                │  Detector    │
+                │    Agent     │
+                └──────┬───────┘
+                       │
+                       ▼
+              ┌────────────────┐
+              │ Final Ranking  │
+              │  & Tier Score  │
+              └────────────────┘
+                    </pre>
+                </div>
+                
+                <div style="margin-top: 1.5rem;">
+                    <h4 style="margin-bottom: 1rem;">Workflow Steps:</h4>
+                    <ol>
+                        <li><strong>Resume Parser Agent</strong>: Extracts name, email, phone, skills, experience from PDF/DOCX</li>
+                        <li><strong>Skills Assessment Agent</strong>: Matches candidate skills against job requirements</li>
+                        <li><strong>Semantic Matching Agent</strong>: Uses AI transformer model (all-MiniLM-L6-v2) for semantic similarity</li>
+                        <li><strong>Red Flag Agent</strong>: Detects career gaps, job hopping, missing skills, etc.</li>
+                        <li><strong>Orchestrator</strong>: Calculates weighted final score and assigns tier (Top/Medium/Low)</li>
+                    </ol>
+                </div>
+            </div>
+</div>
+
+<!-- Modal for Agent Logs -->
+<div class="modal fade" id="logsModal" tabindex="-1" aria-labelledby="logsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="logsModalLabel">Agent Execution Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="logsModalBody">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showLogs(candidateId) {
+    console.log('showLogs called with candidateId:', candidateId);
+    
+    // Show modal
+    const modalElement = document.getElementById('logsModal');
+    console.log('Modal element:', modalElement);
+    
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+    
+    // Fetch agent execution details
+    fetch(`/api/agent_logs/${candidateId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('logsModalBody').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> ${data.error}
+                    </div>
+                `;
+                return;
+            }
+            
+            // Build HTML for logs
+            let html = `
+                <div class="mb-3">
+                    <h6><i class="bi bi-person"></i> Candidate: ${data.candidate_name}</h6>
+                    <p class="text-muted mb-1">Email: ${data.email || 'N/A'}</p>
+                    <p class="text-muted">Phone: ${data.phone || 'N/A'}</p>
+                </div>
+                
+                <hr>
+                
+                <h6><i class="bi bi-graph-up"></i> Agent Scoring Breakdown</h6>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <small class="text-muted">Semantic Similarity (AI)</small>
+                                <h4 class="mb-0">${data.scores.semantic_similarity}%</h4>
+                                <small class="text-muted">Weight: 30%</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <small class="text-muted">Keyword Match (TF-IDF)</small>
+                                <h4 class="mb-0">${data.scores.keyword_match}%</h4>
+                                <small class="text-muted">Weight: 25%</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <small class="text-muted">Skills Match</small>
+                                <h4 class="mb-0">${data.scores.skill_match}%</h4>
+                                <small class="text-muted">Weight: 30%</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <small class="text-muted">Experience Match</small>
+                                <h4 class="mb-0">${data.scores.experience_match}%</h4>
+                                <small class="text-muted">Weight: 15%</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card bg-${data.tier === 'Top' ? 'success' : data.tier === 'Medium' ? 'warning' : 'danger'} bg-opacity-10 mb-3">
+                    <div class="card-body">
+                        <h5>Final Score: ${data.scores.match_score}%</h5>
+                        <p class="mb-0"><strong>Tier: ${data.tier}</strong></p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6><i class="bi bi-flag"></i> Red Flags Detected: ${data.red_flags.length}</h6>
+            `;
+            
+            if (data.red_flags.length > 0) {
+                html += '<div class="list-group mb-3">';
+                data.red_flags.forEach(flag => {
+                    const severityColor = flag.severity === 'high' ? 'danger' : 
+                                         flag.severity === 'medium' ? 'warning' : 'info';
+                    html += `
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">${flag.flag_type}</h6>
+                                <span class="badge bg-${severityColor}">${flag.severity}</span>
+                            </div>
+                            <p class="mb-0 text-muted">${flag.description}</p>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            } else {
+                html += '<div class="alert alert-success"><i class="bi bi-check-circle"></i> No red flags detected</div>';
+            }
+            
+            html += `
+                <hr>
+                <h6><i class="bi bi-file-text"></i> Extracted Skills</h6>
+                <p class="text-muted">${data.skills || 'Not specified'}</p>
+                
+                <h6><i class="bi bi-briefcase"></i> Experience</h6>
+                <p class="text-muted">${data.experience_years} years</p>
+                
+                <h6><i class="bi bi-mortarboard"></i> Education</h6>
+                <p class="text-muted">${data.education || 'Not specified'}</p>
+            `;
+            
+            document.getElementById('logsModalBody').innerHTML = html;
+        })
+        .catch(error => {
+            document.getElementById('logsModalBody').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> Error loading agent logs: ${error.message}
+                </div>
+            `;
+        });
+}
+</script>
+
+<style>
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+</style>
+{% endblock %}
