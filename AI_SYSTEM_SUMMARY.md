@@ -40,7 +40,7 @@ The application uses **5 specialized AI agents** that work together to analyze r
   - **384-dimensional embeddings**
   - **~80MB model size**
 - **Technology**:
-  - **sentence-transformers** (v2.2.2)
+  - **sentence-transformers** (v3.0.1)
   - **scikit-learn** (v1.3.2) - Cosine similarity calculations
   - **numpy** (v1.26.2) - Vector operations
 - **Process**:
@@ -130,7 +130,7 @@ The RAG chatbot enables **natural language querying** of candidate database usin
 ### **AI/ML Libraries**
 | Library | Version | Purpose |
 |---------|---------|---------|
-| sentence-transformers | 2.2.2 | AI semantic embeddings |
+| sentence-transformers | 3.0.1 | AI semantic embeddings |
 | spacy | 3.7.2 | NLP & text processing |
 | scikit-learn | 1.3.2 | ML utilities & cosine similarity |
 | numpy | 1.26.2 | Numerical operations |

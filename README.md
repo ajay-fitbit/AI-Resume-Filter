@@ -148,6 +148,7 @@ The application will start on: **http://localhost:5000**
 - Click **"View Details"** for comprehensive analysis
 - Review skills match, experience match, and red flags
 - Read AI-generated explanations
+- **Download Resume**: Click green download button to get original resume file
 - Delete candidates using the red "Delete" button
 
 ### 6. Chat with AI Assistant (RAG System) 🆕
@@ -180,8 +181,18 @@ The application will start on: **http://localhost:5000**
 - See average match scores
 - Delete jobs using the red "Delete" button (removes all associated data)
 - Click **"All Candidates"** to view all uploaded resumes across all jobs
+- **Download Resumes**: Available on dashboard, candidates page, and chatbot results
 
 ## 🎯 Features
+
+### Resume Download 🆕
+- ✅ Download original resume files from multiple locations:
+  - Dashboard (recent analyses)
+  - Candidates page (desktop & mobile views)
+  - AI Chatbot results
+- ✅ Secure file serving with proper filename format
+- ✅ Files served with original extension (.pdf, .docx, .doc)
+- ✅ Green download buttons for easy identification
 
 ### AI-Powered RAG Chatbot 🆕
 - ✅ **Natural Language Queries**: Ask questions conversationally
@@ -194,6 +205,7 @@ The application will start on: **http://localhost:5000**
 - ✅ **Intelligent Boosting**: Adaptive scoring based on query type
 - ✅ **Fallback Mechanism**: Uses fuzzy matching if AI unavailable
 - ✅ **Local Execution**: No API calls, fully offline
+- ✅ **Download Resumes**: Download candidate resumes directly from chat results
 
 ### Resume Parsing
 - ✅ Extracts name, email, phone

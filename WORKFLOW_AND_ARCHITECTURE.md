@@ -999,7 +999,7 @@ User Browser          Flask API          RAG Agent          AI Model          Da
 | **PDF Parsing** | PyPDF2 | 3.0.1 | Extract text from PDF resumes |
 | **Word Parsing** | python-docx | 1.1.0 | Extract text from DOCX files |
 | **NLP** | spaCy | 3.7.2 | Natural language processing |
-| **AI Embeddings** | sentence-transformers | 2.2.2 | Semantic embeddings (384-dim) |
+| **AI Embeddings** | sentence-transformers | 3.0.1 | Semantic embeddings (384-dim) |
 | **ML Utilities** | scikit-learn | 1.3.2 | Cosine similarity, TF-IDF |
 | **Array Operations** | numpy | 1.26.2 | Vector operations |
 | **Fuzzy Matching** | fuzzywuzzy | 0.18.0 | Skill variation matching |
