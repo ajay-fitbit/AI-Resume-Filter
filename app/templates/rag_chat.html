@@ -508,6 +508,7 @@
                             <div style="color: #6c757d; font-size: 0.9rem;">${escapeHtml(candidate.email || 'No email')}</div>
                             ${candidate.matched_skills ? `<div class="candidate-skills"><strong>Matched Skills:</strong> ${escapeHtml(candidate.matched_skills)}</div>` : ''}
                             ${candidate.experience ? `<div style="color: #6c757d; font-size: 0.9rem; margin-top: 0.25rem;"><strong>Experience:</strong> ${escapeHtml(candidate.experience)}</div>` : ''}
+                            ${candidate.id ? `<div style="margin-top: 0.75rem;"><a href="/download_resume/${candidate.id}" class="btn btn-sm" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; text-decoration: none; display: inline-block; transition: all 0.3s ease;">📥 Download Resume</a></div>` : ''}
                         </div>
                     `;
                 });

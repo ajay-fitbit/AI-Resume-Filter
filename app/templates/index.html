@@ -44,6 +44,7 @@
                 <th>Match Score</th>
                 <th>Tier</th>
                 <th>Date</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -67,6 +68,11 @@
                     {% endif %}
                 </td>
                 <td>{{ analysis.analyzed_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td style="white-space: nowrap;">
+                    <a href="{{ url_for('download_resume', candidate_id=analysis.candidate_id) }}" class="btn" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; background: #28a745; color: white; border: none; border-radius: 4px; text-decoration: none;">
+                        📥 Download
+                    </a>
+                </td>
             </tr>
             {% endfor %}
         </tbody>

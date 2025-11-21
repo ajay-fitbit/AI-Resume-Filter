@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_file
 import os
 from werkzeug.utils import secure_filename
 import sys
@@ -46,13 +46,17 @@ def index():
     
     # Get recent analyses
     recent_analyses = fetch_query(conn, """
-        SELECT c.name, c.email, ar.match_score, ar.tier, ar.analyzed_at, jd.title as job_title
+        SELECT c.id as candidate_id, c.name, c.email, ar.match_score, ar.tier, ar.analyzed_at, jd.title as job_title
         FROM analysis_results ar
         JOIN candidates c ON ar.candidate_id = c.id
         JOIN job_descriptions jd ON ar.job_description_id = jd.id
         ORDER BY ar.analyzed_at DESC
         LIMIT 10
     """)
+    
+    # Ensure recent_analyses is not None
+    if recent_analyses is None:
+        recent_analyses = []
     
     conn.close()
     return render_template('index.html', stats=stats, recent_analyses=recent_analyses)
@@ -357,6 +361,41 @@ def delete_candidate(candidate_id):
         flash(f'Error deleting candidate: {str(e)}', 'error')
     
     return redirect(url_for('candidates'))
+
+@app.route('/download_resume/<int:candidate_id>')
+def download_resume(candidate_id):
+    """Download resume file for a candidate"""
+    conn = create_connection()
+    if not conn:
+        flash('Database connection error', 'error')
+        return redirect(url_for('candidates'))
+    
+    try:
+        # Get candidate resume path
+        candidate = fetch_query(conn, "SELECT name, resume_path FROM candidates WHERE id = %s", (candidate_id,))
+        conn.close()
+        
+        if not candidate:
+            flash('Candidate not found', 'error')
+            return redirect(url_for('candidates'))
+        
+        resume_path = candidate[0]['resume_path']
+        candidate_name = candidate[0]['name']
+        
+        if not resume_path or not os.path.exists(resume_path):
+            flash('Resume file not found', 'error')
+            return redirect(url_for('candidates'))
+        
+        # Extract file extension
+        file_ext = os.path.splitext(resume_path)[1]
+        # Create download filename
+        download_name = f"{candidate_name}_Resume{file_ext}"
+        
+        return send_file(resume_path, as_attachment=True, download_name=download_name)
+        
+    except Exception as e:
+        flash(f'Error downloading resume: {str(e)}', 'error')
+        return redirect(url_for('candidates'))
 
 @app.route('/agent_monitoring')
 def agent_monitoring():
