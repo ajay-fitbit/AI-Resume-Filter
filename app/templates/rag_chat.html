@@ -1,0 +1,583 @@
+{% extends "base.html" %}
+
+{% block title %}Resume Q&A - AI Resume Filter{% endblock %}
+
+{% block content %}
+<h2 style="color: white; margin-bottom: 2rem;">💬 Resume Q&A Assistant</h2>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h3 style="margin-bottom: 0.5rem;">🤖 Ask Questions About Resumes</h3>
+    <p style="color: #6c757d; margin-bottom: 0;">
+        Use natural language to query candidate resumes. Examples: "Which candidates have Python experience?", 
+        "Find candidates with ML and cloud skills", "Who has 5+ years of experience?"
+    </p>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="margin: 0;">Select Job Context</h3>
+        <span id="candidateCount" style="color: #667eea; font-weight: bold;">0 resumes indexed</span>
+    </div>
+    
+    <form id="contextForm" style="margin-bottom: 0;">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="jobSelect">
+                Job Description (Optional - for context-aware answers)
+            </label>
+            <select id="jobSelect" name="job_id">
+                <option value="">All Resumes</option>
+                {% for job in jobs %}
+                <option value="{{ job.id }}">{{ job.title }} ({{ job.candidate_count or 0 }} candidates)</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h4 style="margin: 0;">💬 Chat History</h4>
+        <button onclick="clearChatHistory()" class="btn btn-sm" style="padding: 0.5rem 1rem; background: rgba(220, 53, 69, 0.1); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.3); border-radius: 8px; font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease;">
+            🗑️ Clear History
+        </button>
+    </div>
+    
+    <div id="chatHistory" style="max-height: 500px; overflow-y: auto; margin-bottom: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 12px; min-height: 300px;">
+        <div id="welcomeMessage" style="text-align: center; padding: 3rem 1rem; color: #6c757d;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🤖✨</div>
+            <p style="font-size: 1.3rem; margin-bottom: 0.5rem; font-weight: 600; color: #667eea;">Hello! I'm your AI Resume Assistant</p>
+            <p style="font-size: 1rem; margin-bottom: 1rem;">Ask me anything in natural language - I understand conversational queries!</p>
+            <div style="background: rgba(102, 126, 234, 0.1); padding: 1rem; border-radius: 8px; margin-top: 1.5rem; text-align: left; max-width: 500px; margin-left: auto; margin-right: auto;">
+                <p style="font-size: 0.9rem; margin-bottom: 0.5rem; font-weight: 600;">💬 Try asking:</p>
+                <p style="font-size: 0.85rem; margin: 0.3rem 0;">• "Who's the best candidate for DevOps?"</p>
+                <p style="font-size: 0.85rem; margin: 0.3rem 0;">• "How many candidates know Python?"</p>
+                <p style="font-size: 0.85rem; margin: 0.3rem 0;">• "Recommend someone with 5+ years in testing"</p>
+                <p style="font-size: 0.85rem; margin: 0.3rem 0;">• "List all candidates with SQL experience"</p>
+            </div>
+        </div>
+    </div>
+    
+    <form id="questionForm" style="display: flex; gap: 0.75rem; align-items: flex-end;">
+        <div style="flex: 1;">
+            <label for="questionInput" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                Your Question
+            </label>
+            <textarea 
+                id="questionInput" 
+                name="question" 
+                rows="2" 
+                class="form-control" 
+                placeholder="Ask anything naturally... e.g., 'Who's best for cloud engineering?' or 'How many know Docker?'"
+                style="width: 100%; padding: 0.85rem; border-radius: 10px; border: 2px solid rgba(102, 126, 234, 0.3); background: white; color: #2d3748; resize: vertical; font-size: 0.95rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); transition: all 0.3s ease;"
+                required
+            ></textarea>
+        </div>
+        <button 
+            type="submit" 
+            id="askButton" 
+            class="btn btn-primary" 
+            style="padding: 0.75rem 2rem; height: fit-content; white-space: nowrap;"
+        >
+            <span id="buttonText">🚀 Ask</span>
+            <span id="buttonSpinner" style="display: none;">⏳ Processing...</span>
+        </button>
+    </form>
+</div>
+
+<div class="card" style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.3);">
+    <h4 style="margin-bottom: 1rem;">💡 Example Questions - Try Natural Language!</h4>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.75rem;">
+        <button class="example-question" data-question="Hi! What can you help me with?">
+            👋 Hi! What can you help me with?
+        </button>
+        <button class="example-question" data-question="List all candidates">
+            📋 List all candidates
+        </button>
+        <button class="example-question" data-question="How many candidates have SQL experience?">
+            📊 How many candidates have SQL experience?
+        </button>
+        <button class="example-question" data-question="Who's the best candidate for cloud engineering?">
+            🏆 Who's the best for cloud engineering?
+        </button>
+        <button class="example-question" data-question="Show me candidates with Python and Docker">
+            🔍 Show me candidates with Python and Docker
+        </button>
+        <button class="example-question" data-question="Recommend candidates for a DevOps role">
+            💡 Recommend candidates for DevOps role
+        </button>
+        <button class="example-question" data-question="Find candidates with 5+ years experience in testing">
+            ⏱️ 5+ years experience in testing
+        </button>
+        <button class="example-question" data-question="Which candidates know machine learning and AI?">
+            🤖 Who knows ML and AI?
+        </button>
+    </div>
+</div>
+
+<style>
+    .example-question {
+        padding: 0.75rem 1rem;
+        background: white;
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        border-radius: 10px;
+        color: #667eea;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: left;
+        font-size: 0.9rem;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        letter-spacing: 0.3px;
+    }
+    
+    .example-question:hover {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border-color: #667eea;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        color: #667eea;
+    }
+    
+    button.btn-sm:hover {
+        background: rgba(220, 53, 69, 0.2) !important;
+        border-color: #dc3545 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+    
+    .message {
+        margin-bottom: 1rem;
+        padding: 1.25rem;
+        border-radius: 12px;
+        animation: fadeIn 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .user-message {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        margin-left: 2rem;
+        text-align: right;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .assistant-message {
+        background: white;
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        margin-right: 2rem;
+        color: #2d3748;
+    }
+    
+    .markdown-content {
+        line-height: 1.7;
+    }
+    
+    .markdown-content h2 {
+        border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        padding-bottom: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .markdown-content h3 {
+        margin-top: 0.8rem;
+    }
+    
+    .markdown-content ul {
+        list-style-type: none;
+    }
+    
+    .markdown-content li {
+        position: relative;
+        padding-left: 1.5rem;
+    }
+    
+    .markdown-content li:before {
+        content: "•";
+        position: absolute;
+        left: 0.5rem;
+        color: #667eea;
+        font-weight: bold;
+    }
+    
+    .markdown-content strong {
+        font-weight: 600;
+    }
+    
+    .markdown-content code {
+        font-size: 0.9em;
+    }
+    
+    .candidate-result {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 0.75rem 0;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    .candidate-result:hover {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border-color: #667eea;
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    }
+    
+    .candidate-name {
+        font-weight: 700;
+        color: #667eea;
+        font-size: 1.05rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .candidate-skills {
+        color: #4a5568;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    .relevance-score {
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+        box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Fix input visibility */
+    #questionInput::placeholder {
+        color: #a0aec0;
+        font-style: italic;
+    }
+    
+    #jobSelect option {
+        background: white;
+        color: #2d3748;
+    }
+    
+    #questionInput:focus,
+    #jobSelect:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+    }
+    
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .user-message {
+            margin-left: 0;
+        }
+        
+        .assistant-message {
+            margin-right: 0;
+        }
+        
+        #questionForm {
+            flex-direction: column;
+        }
+        
+        #askButton {
+            width: 100%;
+        }
+        
+        .example-question {
+            font-size: 0.85rem;
+            padding: 0.6rem 0.85rem;
+        }
+    }
+</style>
+
+<script>
+    let chatHistory = [];
+    const CHAT_HISTORY_KEY = 'rag_chat_history';
+    const MAX_HISTORY = 50; // Keep last 50 messages
+    
+    // Load chat history from localStorage on page load
+    function loadChatHistory() {
+        try {
+            const saved = localStorage.getItem(CHAT_HISTORY_KEY);
+            if (saved) {
+                chatHistory = JSON.parse(saved);
+                // Restore messages to UI
+                chatHistory.forEach(msg => {
+                    addMessageToUI(msg.text, msg.type, msg.candidates);
+                });
+                // Hide welcome if there's history
+                if (chatHistory.length > 0) {
+                    document.getElementById('welcomeMessage').style.display = 'none';
+                }
+                console.log(`✅ Loaded ${chatHistory.length} messages from chat history`);
+            }
+        } catch (error) {
+            console.error('Error loading chat history:', error);
+        }
+    }
+    
+    // Save chat history to localStorage
+    function saveChatHistory() {
+        try {
+            // Keep only last MAX_HISTORY messages
+            if (chatHistory.length > MAX_HISTORY) {
+                chatHistory = chatHistory.slice(-MAX_HISTORY);
+            }
+            localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(chatHistory));
+        } catch (error) {
+            console.error('Error saving chat history:', error);
+        }
+    }
+    
+    // Clear chat history
+    function clearChatHistory() {
+        const messageCount = chatHistory.length;
+        if (confirm(`Are you sure you want to clear all ${messageCount} messages from chat history?`)) {
+            chatHistory = [];
+            localStorage.removeItem(CHAT_HISTORY_KEY);
+            
+            // Clear UI
+            const chatDiv = document.getElementById('chatHistory');
+            chatDiv.innerHTML = '';
+            
+            // Recreate welcome message
+            const welcomeDiv = document.createElement('div');
+            welcomeDiv.id = 'welcomeMessage';
+            welcomeDiv.style.cssText = 'text-align: center; padding: 3rem 1rem; color: #6c757d;';
+            welcomeDiv.innerHTML = `
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🤖✨</div>
+                <p style="font-size: 1.3rem; margin-bottom: 0.5rem; font-weight: 600; color: #667eea;">Hello! I'm your AI Resume Assistant</p>
+                <p style="font-size: 1rem; margin-bottom: 1rem;">Ask me anything in natural language - I understand conversational queries!</p>
+                <div style="background: rgba(102, 126, 234, 0.1); padding: 1rem; border-radius: 8px; margin-top: 1.5rem; text-align: left; max-width: 500px; margin-left: auto; margin-right: auto;">
+                    <p style="font-size: 0.9rem; margin-bottom: 0.5rem; font-weight: 600;">💬 Try asking:</p>
+                    <p style="font-size: 0.85rem; margin: 0.3rem 0;">• "Who's the best candidate for DevOps?"</p>
+                    <p style="font-size: 0.85rem; margin: 0.3rem 0;">• "How many candidates know Python?"</p>
+                    <p style="font-size: 0.85rem; margin: 0.3rem 0;">• "Recommend someone with 5+ years in testing"</p>
+                    <p style="font-size: 0.85rem; margin: 0.3rem 0;">• "List all candidates with SQL experience"</p>
+                </div>
+            `;
+            chatDiv.appendChild(welcomeDiv);
+            
+            console.log('🗑️ Chat history cleared');
+        }
+    }
+    
+    // Update candidate count when job selection changes
+    document.getElementById('jobSelect').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const text = selectedOption.text;
+        const match = text.match(/\((\d+) candidates?\)/);
+        const count = match ? match[1] : '0';
+        document.getElementById('candidateCount').textContent = count + ' resumes indexed';
+    });
+    
+    // Initialize count
+    const initialOption = document.getElementById('jobSelect').options[document.getElementById('jobSelect').selectedIndex];
+    if (initialOption.value) {
+        const text = initialOption.text;
+        const match = text.match(/\((\d+) candidates?\)/);
+        const count = match ? match[1] : '0';
+        document.getElementById('candidateCount').textContent = count + ' resumes indexed';
+    } else {
+        // Count total candidates across all jobs
+        let totalCount = 0;
+        Array.from(document.getElementById('jobSelect').options).forEach(option => {
+            if (option.value) {
+                const match = option.text.match(/\((\d+) candidates?\)/);
+                if (match) totalCount += parseInt(match[1]);
+            }
+        });
+        document.getElementById('candidateCount').textContent = totalCount + ' resumes indexed';
+    }
+    
+    // Load chat history when page loads
+    loadChatHistory();
+    
+    // Handle example question clicks
+    document.querySelectorAll('.example-question').forEach(button => {
+        button.addEventListener('click', function() {
+            document.getElementById('questionInput').value = this.dataset.question;
+            document.getElementById('questionForm').dispatchEvent(new Event('submit'));
+        });
+    });
+    
+    // Handle form submission
+    document.getElementById('questionForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const question = document.getElementById('questionInput').value.trim();
+        if (!question) return;
+        
+        const jobId = document.getElementById('jobSelect').value;
+        
+        // Hide welcome message
+        document.getElementById('welcomeMessage').style.display = 'none';
+        
+        // Add user message to chat
+        addMessage(question, 'user');
+        
+        // Clear input and disable button
+        document.getElementById('questionInput').value = '';
+        setButtonLoading(true);
+        
+        try {
+            // Send request to backend
+            const response = await fetch('/api/rag/query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    question: question,
+                    job_id: jobId || null
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Add assistant response
+                addMessage(data.answer, 'assistant', data.candidates);
+            } else {
+                addMessage('Sorry, I encountered an error: ' + (data.error || 'Unknown error'), 'assistant');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            addMessage('Sorry, I encountered an error processing your question. Please try again.', 'assistant');
+        } finally {
+            setButtonLoading(false);
+        }
+    });
+    
+    function addMessage(text, type, candidates = null) {
+        // Add to history array
+        chatHistory.push({
+            text: text,
+            type: type,
+            candidates: candidates,
+            timestamp: new Date().toISOString()
+        });
+        
+        // Save to localStorage
+        saveChatHistory();
+        
+        // Add to UI
+        addMessageToUI(text, type, candidates);
+    }
+    
+    function addMessageToUI(text, type, candidates = null) {
+        const chatDiv = document.getElementById('chatHistory');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type}-message`;
+        
+        if (type === 'user') {
+            messageDiv.innerHTML = `<div><strong>You:</strong> ${escapeHtml(text)}</div>`;
+        } else {
+            // Format markdown text for assistant messages
+            const formattedText = formatMarkdown(text);
+            let content = `<div><strong>🤖 Assistant:</strong></div><div style="margin-top: 0.5rem;" class="markdown-content">${formattedText}</div>`;
+            
+            if (candidates && candidates.length > 0) {
+                content += '<div style="margin-top: 1rem;">';
+                candidates.forEach(candidate => {
+                    // Handle relevance score - show only if > 0
+                    const relevanceScore = candidate.relevance_score || 0;
+                    const scoreDisplay = relevanceScore > 0 
+                        ? `<span class="relevance-score">${relevanceScore.toFixed(2)}% match</span>` 
+                        : '';
+                    
+                    content += `
+                        <div class="candidate-result">
+                            <div class="candidate-name">
+                                ${escapeHtml(candidate.name)}
+                                ${scoreDisplay}
+                            </div>
+                            <div style="color: #6c757d; font-size: 0.9rem;">${escapeHtml(candidate.email || 'No email')}</div>
+                            ${candidate.matched_skills ? `<div class="candidate-skills"><strong>Matched Skills:</strong> ${escapeHtml(candidate.matched_skills)}</div>` : ''}
+                            ${candidate.experience ? `<div style="color: #6c757d; font-size: 0.9rem; margin-top: 0.25rem;"><strong>Experience:</strong> ${escapeHtml(candidate.experience)}</div>` : ''}
+                            ${candidate.id ? `<div style="margin-top: 0.75rem;"><a href="/download_resume/${candidate.id}" class="btn btn-sm" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; text-decoration: none; display: inline-block; transition: all 0.3s ease;">📥 Download Resume</a></div>` : ''}
+                        </div>
+                    `;
+                });
+                content += '</div>';
+            }
+            
+            messageDiv.innerHTML = content;
+        }
+        
+        chatDiv.appendChild(messageDiv);
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+    }
+    
+    function formatMarkdown(text) {
+        // Simple markdown formatter
+        let html = escapeHtml(text);
+        
+        // Headers (## Header)
+        html = html.replace(/^## (.+)$/gm, '<h2 style="color: #667eea; margin: 0.5rem 0; font-size: 1.3rem;">$1</h2>');
+        html = html.replace(/^### (.+)$/gm, '<h3 style="color: #667eea; margin: 0.4rem 0; font-size: 1.1rem;">$1</h3>');
+        
+        // Bold (**text** or __text__)
+        html = html.replace(/\*\*(.+?)\*\*/g, '<strong style="color: #667eea;">$1</strong>');
+        html = html.replace(/__(.+?)__/g, '<strong style="color: #667eea;">$1</strong>');
+        
+        // Italic (*text* or _text_)
+        html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+        html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+        
+        // Lists (• or - or *)
+        html = html.replace(/^[•\-\*] (.+)$/gm, '<li style="margin-left: 1.5rem; margin-bottom: 0.3rem;">$1</li>');
+        
+        // Wrap consecutive list items in ul
+        html = html.replace(/(<li[^>]*>.*<\/li>\s*)+/g, function(match) {
+            return '<ul style="margin: 0.5rem 0; padding-left: 0;">' + match + '</ul>';
+        });
+        
+        // Line breaks
+        html = html.replace(/\n\n/g, '<br><br>');
+        html = html.replace(/\n/g, '<br>');
+        
+        // Code blocks (`code`)
+        html = html.replace(/`(.+?)`/g, '<code style="background: rgba(102, 126, 234, 0.1); padding: 0.2rem 0.4rem; border-radius: 4px; font-family: monospace; color: #667eea;">$1</code>');
+        
+        return html;
+    }
+    
+    function setButtonLoading(loading) {
+        const button = document.getElementById('askButton');
+        const buttonText = document.getElementById('buttonText');
+        const buttonSpinner = document.getElementById('buttonSpinner');
+        
+        button.disabled = loading;
+        buttonText.style.display = loading ? 'none' : 'inline';
+        buttonSpinner.style.display = loading ? 'inline' : 'none';
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Allow Enter to submit (Shift+Enter for new line)
+    document.getElementById('questionInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            document.getElementById('questionForm').dispatchEvent(new Event('submit'));
+        }
+    });
+</script>
+{% endblock %}

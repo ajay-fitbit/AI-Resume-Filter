@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Resumes - AI Resume Filter{% endblock %}
+
+{% block content %}
+<h2 style="color: white; margin-bottom: 2rem;">📤 Upload Resumes</h2>
+
+{% if not jobs %}
+<div class="card" style="background: #fff3cd; border-left: 4px solid #ffc107;">
+    <h4 style="color: #856404; margin-bottom: 1rem;">⚠️ No Job Descriptions Found</h4>
+    <p style="color: #856404; margin-bottom: 1rem;">You need to create a job description before uploading resumes.</p>
+    <a href="{{ url_for('create_job') }}" class="btn btn-primary">
+        ➕ Create Job Description
+    </a>
+</div>
+{% else %}
+<div class="card">
+    <form method="POST" enctype="multipart/form-data">
+        <h3 style="margin-bottom: 1.5rem;">Select Job Description</h3>
+        
+        <div class="form-group">
+            <label for="job_description_id">Job Posting *</label>
+            <select id="job_description_id" name="job_description_id" required style="font-size: 1rem;">
+                <option value="">-- Select a job description --</option>
+                {% for job in jobs %}
+                <option value="{{ job.id }}">{{ job.title }}</option>
+                {% endfor %}
+            </select>
+            <small style="color: #6c757d; display: block; margin-top: 0.5rem;">
+                Don't see your job? <a href="{{ url_for('create_job') }}" style="color: #667eea;">Create a new one</a>
+            </small>
+        </div>
+        
+        <hr style="margin: 2rem 0; border: none; border-top: 1px solid #e9ecef;">
+        
+        <h3 style="margin-bottom: 1.5rem;">Upload Resumes</h3>
+        
+        <div class="form-group">
+            <label for="resumes">Select Resume Files (PDF or DOCX) *</label>
+            <input type="file" id="resumes" name="resumes" multiple accept=".pdf,.doc,.docx" required>
+            <small style="color: #6c757d; display: block; margin-top: 0.5rem;">
+                You can select multiple files. Maximum size per file: 16MB
+            </small>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">
+                🚀 Process Resumes
+            </button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endif %}
+
+<div class="card" style="background: #f8f9fa; border: 2px dashed #667eea;">
+    <h4 style="color: #667eea; margin-bottom: 1rem;">ℹ️ How it works</h4>
+    <ol style="color: #495057; line-height: 1.8;">
+        <li>Select an existing job description from the dropdown</li>
+        <li>Upload one or more resumes (PDF or DOCX format)</li>
+        <li>Our AI will automatically:
+            <ul style="margin-top: 0.5rem;">
+                <li>Extract candidate information</li>
+                <li>Match skills and experience with job requirements</li>
+                <li>Calculate match scores (0-100%)</li>
+                <li>Detect potential red flags</li>
+                <li>Rank candidates into tiers</li>
+            </ul>
+        </li>
+        <li>View detailed results and explanations for each candidate</li>
+    </ol>
+</div>
+{% endblock %}

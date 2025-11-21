@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AI Resume Filter{% endblock %}
+
+{% block content %}
+<h2 style="color: white; margin-bottom: 2rem;">📊 Dashboard</h2>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="card" style="text-align: center;">
+        <h3 style="color: #667eea; font-size: 2.5rem; margin-bottom: 0.5rem;">{{ stats.total_candidates }}</h3>
+        <p style="color: #6c757d; font-weight: 600;">Total Candidates</p>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <h3 style="color: #28a745; font-size: 2.5rem; margin-bottom: 0.5rem;">{{ stats.top_tier }}</h3>
+        <p style="color: #6c757d; font-weight: 600;">Top Tier</p>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <h3 style="color: #ffc107; font-size: 2.5rem; margin-bottom: 0.5rem;">{{ stats.medium_tier }}</h3>
+        <p style="color: #6c757d; font-weight: 600;">Medium Tier</p>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <h3 style="color: #dc3545; font-size: 2.5rem; margin-bottom: 0.5rem;">{{ stats.low_tier }}</h3>
+        <p style="color: #6c757d; font-weight: 600;">Low Tier</p>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <h3 style="color: #764ba2; font-size: 2.5rem; margin-bottom: 0.5rem;">{{ stats.total_jobs }}</h3>
+        <p style="color: #6c757d; font-weight: 600;">Job Postings</p>
+    </div>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom: 1.5rem;">Recent Analysis</h3>
+    
+    {% if recent_analyses %}
+    <table>
+        <thead>
+            <tr>
+                <th>Candidate</th>
+                <th>Job Title</th>
+                <th>Match Score</th>
+                <th>Tier</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for analysis in recent_analyses %}
+            <tr>
+                <td>
+                    <strong>{{ analysis.name }}</strong><br>
+                    <small style="color: #6c757d;">{{ analysis.email }}</small>
+                </td>
+                <td>{{ analysis.job_title }}</td>
+                <td>
+                    <strong style="color: #667eea;">{{ "%.2f"|format(analysis.match_score) }}%</strong>
+                </td>
+                <td>
+                    {% if analysis.tier == 'Top Tier' %}
+                        <span class="badge badge-success">{{ analysis.tier }}</span>
+                    {% elif analysis.tier == 'Medium Tier' %}
+                        <span class="badge badge-warning">{{ analysis.tier }}</span>
+                    {% else %}
+                        <span class="badge badge-danger">{{ analysis.tier }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ analysis.analyzed_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td style="white-space: nowrap;">
+                    <a href="{{ url_for('download_resume', candidate_id=analysis.candidate_id) }}" class="btn" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; background: #28a745; color: white; border: none; border-radius: 4px; text-decoration: none;">
+                        📥 Download
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="text-align: center; color: #6c757d; padding: 2rem;">No analyses yet. Upload resumes to get started!</p>
+    {% endif %}
+</div>
+
+<div style="text-align: center; margin-top: 2rem;">
+    <a href="{{ url_for('upload') }}" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+        📤 Upload New Resumes
+    </a>
+</div>
+{% endblock %}

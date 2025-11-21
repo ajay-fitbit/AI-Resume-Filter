@@ -1,0 +1,21 @@
+uploads/
+venv/
+.env
+__pycache__/
+*.docx
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.log
+.DS_Store
+.idea/
+.vscode/
+
+# Ignore large files + model weights
+*.pt
+*.bin
+*.dll
+*.ckpt
+*.onnx

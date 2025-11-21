@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}{{ candidate.name }} - AI Resume Filter{% endblock %}
+
+{% block content %}
+<h2 style="color: white; margin-bottom: 2rem;">📄 Candidate Details</h2>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: start;">
+        <div>
+            <h2 style="margin-bottom: 0.5rem;">{{ candidate.name }}</h2>
+            <p style="color: #6c757d; margin-bottom: 0.5rem;">
+                {% if candidate.email %}📧 {{ candidate.email }}{% endif %}
+            </p>
+            <p style="color: #6c757d;">
+                {% if candidate.phone %}📞 {{ candidate.phone }}{% endif %}
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="{{ url_for('candidates') }}" class="btn btn-secondary">← Back to List</a>
+            <form method="POST" action="{{ url_for('delete_candidate', candidate_id=candidate.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete {{ candidate.name }}? This will permanently remove all their data including resume and analysis results.');">
+                <button type="submit" class="btn" style="background: #dc3545; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                    🗑️ Delete Candidate
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if analysis %}
+{% for result in analysis %}
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">Analysis for: {{ result.job_title }}</h3>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+            <h4 style="color: #667eea; font-size: 2rem; margin-bottom: 0.5rem;">{{ "%.2f"|format(result.match_score) }}%</h4>
+            <p style="color: #6c757d; font-weight: 600;">Overall Match</p>
+        </div>
+        
+        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+            <h4 style="color: #667eea; font-size: 2rem; margin-bottom: 0.5rem;">{{ "%.2f"|format(result.skill_match_score) }}%</h4>
+            <p style="color: #6c757d; font-weight: 600;">Skills</p>
+        </div>
+        
+        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+            <h4 style="color: #28a745; font-size: 2rem; margin-bottom: 0.5rem;">{{ "%.2f"|format(result.experience_match_score) }}%</h4>
+            <p style="color: #6c757d; font-weight: 600;">Experience</p>
+        </div>
+        
+        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+            <h4 style="color: #ffc107; font-size: 2rem; margin-bottom: 0.5rem;">{{ "%.2f"|format(result.keyword_match_score) }}%</h4>
+            <p style="color: #6c757d; font-weight: 600;">Keywords</p>
+        </div>
+        
+        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+            <h4 style="color: #17a2b8; font-size: 2rem; margin-bottom: 0.5rem;">{{ "%.2f"|format(result.semantic_similarity_score) }}%</h4>
+            <p style="color: #6c757d; font-weight: 600;">Semantic</p>
+        </div>
+    </div>
+    
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+        <h4 style="margin-bottom: 0.5rem;">Tier Classification</h4>
+        <h3>{{ result.tier }}</h3>
+    </div>
+    
+    <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px;">
+        <h4 style="margin-bottom: 1rem;">💡 AI Explanation</h4>
+        <p style="line-height: 1.8; color: #495057;">{{ result.explanation }}</p>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+
+{% if resume_data %}
+<div class="card">
+    <h3 style="margin-bottom: 1.5rem;">Resume Information</h3>
+    
+    <div style="display: grid; gap: 1.5rem;">
+        <div>
+            <h4 style="color: #667eea; margin-bottom: 0.5rem;">💼 Experience</h4>
+            <p><strong>{{ resume_data.experience_years }} years</strong></p>
+        </div>
+        
+        <div>
+            <h4 style="color: #667eea; margin-bottom: 0.5rem;">🛠️ Skills</h4>
+            <p>{{ resume_data.skills }}</p>
+        </div>
+        
+        <div>
+            <h4 style="color: #667eea; margin-bottom: 0.5rem;">🎓 Education</h4>
+            <p>{{ resume_data.education }}</p>
+        </div>
+        
+        <div>
+            <h4 style="color: #667eea; margin-bottom: 0.5rem;">👔 Job Titles</h4>
+            <p>{{ resume_data.job_titles }}</p>
+        </div>
+        
+        <div>
+            <h4 style="color: #667eea; margin-bottom: 0.5rem;">📜 Certifications</h4>
+            <p>{{ resume_data.certifications }}</p>
+        </div>
+        
+        <div>
+            <h4 style="color: #667eea; margin-bottom: 0.5rem;">🚀 Projects</h4>
+            <p>{{ resume_data.projects }}</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if red_flags %}
+<div class="card" style="border-left: 4px solid #dc3545;">
+    <h3 style="margin-bottom: 1.5rem; color: #dc3545;">🚩 Red Flags Detected</h3>
+    
+    <div style="display: grid; gap: 1rem;">
+        {% for flag in red_flags %}
+        <div style="padding: 1rem; background: {% if flag.severity == 'High' %}#f8d7da{% else %}#fff3cd{% endif %}; border-radius: 8px; border-left: 3px solid {% if flag.severity == 'High' %}#dc3545{% else %}#ffc107{% endif %};">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                <strong style="color: #495057;">{{ flag.flag_type }}</strong>
+                <span class="badge {% if flag.severity == 'High' %}badge-danger{% else %}badge-warning{% endif %}">
+                    {{ flag.severity }}
+                </span>
+            </div>
+            <p style="color: #495057; margin: 0;">{{ flag.description }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="card" style="background: #d4edda; border-left: 4px solid #28a745;">
+    <h3 style="color: #28a745; margin-bottom: 0.5rem;">✅ No Red Flags</h3>
+    <p style="color: #155724;">This candidate has a clean profile with no detected red flags.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Candidates - AI Resume Filter{% endblock %}
+
+{% block content %}
+<h2 style="color: white; margin-bottom: 2rem;">👥 Candidates</h2>
+
+{% if job %}
+<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+    <h3 style="margin-bottom: 1rem;">{{ job.title }}</h3>
+    <p style="opacity: 0.9;">{{ job.description[:200] }}...</p>
+    <small style="opacity: 0.8;">Posted: {{ job.created_at.strftime('%Y-%m-%d') }}</small>
+</div>
+{% endif %}
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3>Ranked Candidates</h3>
+        {% if candidates %}
+        <span style="color: #6c757d;">{{ candidates|length }} candidates</span>
+        {% endif %}
+    </div>
+    
+    {% if candidates %}
+    <!-- Desktop/Tablet Table View -->
+    <table class="desktop-table">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Candidate</th>
+                <th>Skills Match</th>
+                <th>Experience Match</th>
+                <th>Overall Score</th>
+                <th>Tier</th>
+                <th>Red Flags</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for candidate in candidates %}
+            <tr>
+                <td><strong>#{{ loop.index }}</strong></td>
+                <td>
+                    <strong>{{ candidate.name }}</strong><br>
+                    <small style="color: #6c757d;">{{ candidate.email or 'No email' }}</small>
+                </td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <div style="flex: 1; height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden;">
+                            <div style="height: 100%; background: #667eea; width: {{ candidate.skill_match_score }}%;"></div>
+                        </div>
+                        <span style="font-weight: 600; color: #667eea;">{{ "%.2f"|format(candidate.skill_match_score) }}%</span>
+                    </div>
+                </td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <div style="flex: 1; height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden;">
+                            <div style="height: 100%; background: #28a745; width: {{ candidate.experience_match_score }}%;"></div>
+                        </div>
+                        <span style="font-weight: 600; color: #28a745;">{{ "%.2f"|format(candidate.experience_match_score) }}%</span>
+                    </div>
+                </td>
+                <td>
+                    <strong style="font-size: 1.2rem; color: #667eea;">{{ "%.2f"|format(candidate.match_score) }}%</strong>
+                </td>
+                <td style="white-space: nowrap;">
+                    {% if candidate.tier == 'Top Tier' %}
+                        <span class="badge badge-success">{{ candidate.tier }}</span>
+                    {% elif candidate.tier == 'Medium Tier' %}
+                        <span class="badge badge-warning">{{ candidate.tier }}</span>
+                    {% else %}
+                        <span class="badge badge-danger">{{ candidate.tier }}</span>
+                    {% endif %}
+                </td>
+                <td style="white-space: nowrap;">
+                    {% if candidate.high_flags > 0 %}
+                        <span class="badge badge-danger">{{ candidate.high_flags }} High</span>
+                    {% else %}
+                        <span style="color: #28a745;">✓ Clean</span>
+                    {% endif %}
+                </td>
+                <td style="white-space: nowrap;">
+                    <a href="{{ url_for('candidate_detail', candidate_id=candidate.id) }}" class="btn btn-primary" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; margin-right: 0.5rem;">
+                        View
+                    </a>
+                    <a href="{{ url_for('download_resume', candidate_id=candidate.id) }}" class="btn" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; background: #28a745; color: white; border: none; border-radius: 4px; text-decoration: none; margin-right: 0.5rem;">
+                        📥 Download
+                    </a>
+                    <form method="POST" action="{{ url_for('delete_candidate', candidate_id=candidate.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete {{ candidate.name }}? This will remove all their data including resume and analysis results.');">
+                        <button type="submit" class="btn" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            Delete
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <!-- Mobile Card View -->
+    <div class="mobile-cards">
+        {% for candidate in candidates %}
+        <div class="mobile-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <div>
+                    <div style="color: #667eea; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.25rem;">RANK #{{ loop.index }}</div>
+                    <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.25rem; color: #212529;">{{ candidate.name }}</div>
+                    <div style="color: #6c757d; font-size: 0.9rem;">{{ candidate.email or 'No email' }}</div>
+                </div>
+                <div style="text-align: right;">
+                    {% if candidate.tier == 'Top Tier' %}
+                        <span class="badge badge-success" style="font-size: 0.85rem;">Top Tier</span>
+                    {% elif candidate.tier == 'Medium Tier' %}
+                        <span class="badge badge-warning" style="font-size: 0.85rem;">Medium Tier</span>
+                    {% else %}
+                        <span class="badge badge-danger" style="font-size: 0.85rem;">{{ candidate.tier }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="color: #6c757d; font-size: 0.9rem;">Overall Score</span>
+                    <strong style="color: #667eea; font-size: 1.3rem;">{{ "%.2f"|format(candidate.match_score) }}%</strong>
+                </div>
+                
+                <div style="margin-bottom: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                        <span style="color: #6c757d; font-size: 0.85rem;">Skills Match</span>
+                        <strong style="color: #667eea; font-size: 0.9rem;">{{ "%.2f"|format(candidate.skill_match_score) }}%</strong>
+                    </div>
+                    <div style="background: #e9ecef; border-radius: 4px; height: 6px; overflow: hidden;">
+                        <div style="background: #667eea; height: 100%; width: {{ candidate.skill_match_score }}%; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                        <span style="color: #6c757d; font-size: 0.85rem;">Experience Match</span>
+                        <strong style="color: #28a745; font-size: 0.9rem;">{{ "%.2f"|format(candidate.experience_match_score) }}%</strong>
+                    </div>
+                    <div style="background: #e9ecef; border-radius: 4px; height: 6px; overflow: hidden;">
+                        <div style="background: #28a745; height: 100%; width: {{ candidate.experience_match_score }}%; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #6c757d; font-size: 0.85rem;">Red Flags</span>
+                    {% if candidate.high_flags > 0 %}
+                        <span class="badge badge-danger" style="font-size: 0.85rem;">{{ candidate.high_flags }} High</span>
+                    {% else %}
+                        <span style="color: #28a745; font-size: 0.9rem;">✓ Clean</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="{{ url_for('candidate_detail', candidate_id=candidate.id) }}" class="btn btn-primary" style="flex: 1; padding: 0.75rem; font-size: 0.9rem; text-align: center; min-width: 120px;">
+                    View Details
+                </a>
+                <a href="{{ url_for('download_resume', candidate_id=candidate.id) }}" class="btn" style="flex: 1; padding: 0.75rem; font-size: 0.9rem; text-align: center; background: #28a745; color: white; border: none; border-radius: 4px; text-decoration: none; min-width: 120px;">
+                    📥 Download
+                </a>
+                <form method="POST" action="{{ url_for('delete_candidate', candidate_id=candidate.id) }}" style="flex: 0 0 auto;" onsubmit="return confirm('Are you sure you want to delete {{ candidate.name }}? This will remove all their data including resume and analysis results.');">
+                    <button type="submit" class="btn" style="padding: 0.75rem 1rem; font-size: 0.9rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        🗑️
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="text-align: center; color: #6c757d; padding: 2rem;">
+        No candidates found. <a href="{{ url_for('upload') }}" style="color: #667eea; text-decoration: underline;">Upload resumes</a> to get started.
+    </p>
+    {% endif %}
+</div>
+
+{% if candidates %}
+<div class="card" style="background: #f8f9fa;">
+    <h4 style="margin-bottom: 1rem;">📋 Summary</h4>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div>
+            <strong style="color: #28a745;">Top Tier:</strong>
+            {{ candidates | selectattr('tier', 'equalto', 'Top Tier') | list | length }} candidates
+        </div>
+        <div>
+            <strong style="color: #ffc107;">Medium Tier:</strong>
+            {{ candidates | selectattr('tier', 'equalto', 'Medium Tier') | list | length }} candidates
+        </div>
+        <div>
+            <strong style="color: #dc3545;">Low Tier:</strong>
+            {{ candidates | selectattr('tier', 'equalto', 'Low Tier') | list | length }} candidates
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
