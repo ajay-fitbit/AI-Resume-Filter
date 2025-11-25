@@ -34,8 +34,8 @@
             max-width: 1400px;
             margin: 0 auto;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 1rem;
         }
         
         .navbar h1 {
@@ -50,7 +50,32 @@
         
         .nav-links {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .nav-group {
+            display: flex;
+            gap: 0.25rem;
+            align-items: center;
+            padding: 0.3rem 0.6rem;
+            border-radius: 8px;
+            background: rgba(102, 126, 234, 0.05);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+        
+        .nav-group-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #667eea;
+            margin-right: 0.4rem;
+            padding: 0.2rem 0.5rem;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 4px;
+            white-space: nowrap;
         }
         
         .nav-links a {
@@ -58,27 +83,35 @@
             text-decoration: none;
             font-weight: 500;
             transition: all 0.3s ease;
-            padding: 0.6rem 1.2rem;
-            border-radius: 8px;
-            font-size: 0.95rem;
+            padding: 0.5rem 0.9rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            white-space: nowrap;
         }
         
         .nav-links a:hover {
-            background: rgba(102, 126, 234, 0.1);
+            background: rgba(102, 126, 234, 0.15);
             color: #667eea;
             transform: translateY(-1px);
         }
         
-        .nav-links a.agent-link {
+        .nav-links a.special-link {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             font-weight: 600;
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
         
-        .nav-links a.agent-link:hover {
+        .nav-links a.special-link:hover {
             box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
             transform: translateY(-2px);
+        }
+        
+        .nav-divider {
+            width: 1px;
+            height: 24px;
+            background: linear-gradient(to bottom, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+            border-radius: 1px;
         }
         
         .container {
@@ -343,14 +376,34 @@
             }
             
             .nav-links {
-                flex-wrap: wrap;
-                gap: 0.5rem;
+                flex-direction: column;
+                gap: 0.75rem;
                 width: 100%;
+            }
+            
+            .nav-group {
+                flex-direction: column;
+                width: 100%;
+                padding: 0.75rem;
+                gap: 0.5rem;
+            }
+            
+            .nav-group-title {
+                width: 100%;
+                text-align: center;
+                margin-right: 0;
+                margin-bottom: 0.25rem;
+            }
+            
+            .nav-divider {
+                display: none;
             }
             
             .nav-links a {
                 padding: 0.5rem 1rem;
                 font-size: 0.85rem;
+                width: 100%;
+                text-align: center;
             }
             
             .container {
@@ -406,6 +459,16 @@
             .nav-links {
                 flex-direction: column;
                 width: 100%;
+                gap: 0.5rem;
+            }
+            
+            .nav-group {
+                padding: 0.5rem;
+            }
+            
+            .nav-group-title {
+                font-size: 0.7rem;
+                padding: 0.25rem 0.5rem;
             }
             
             .nav-links a {
@@ -551,13 +614,34 @@
         <div class="navbar-content">
             <h1>🤖 AI Resume Filter</h1>
             <div class="nav-links">
-                <a href="{{ url_for('index') }}">Dashboard</a>
-                <a href="{{ url_for('create_job') }}">Create Job</a>
-                <a href="{{ url_for('upload') }}">Upload Resumes</a>
-                <a href="{{ url_for('candidates') }}">All Candidates</a>
-                <a href="{{ url_for('jobs') }}">All Jobs</a>
-                <a href="{{ url_for('rag_chat') }}">💬 Resume Q&A</a>
-                <a href="{{ url_for('agent_monitoring') }}" class="agent-link">🤖 Agents</a>
+                <!-- Dashboard -->
+                <div class="nav-group">
+                    <a href="{{ url_for('index') }}">Dashboard</a>
+                </div>
+                
+                <div class="nav-divider"></div>
+                
+                <!-- Bulk Upload Section (Independent Analysis) -->
+                <div class="nav-group">
+                    <a href="{{ url_for('bulk_upload') }}">📁 Bulk Upload</a>
+                    <a href="{{ url_for('bulk_analysis') }}">Candidate Analysis</a>
+                </div>
+                
+                <div class="nav-divider"></div>
+                
+                <!-- Job-Based Section (Match to JD) -->
+                <div class="nav-group">
+                    <a href="{{ url_for('create_job') }}">Create Job</a>
+                    <a href="{{ url_for('upload') }}">Upload for Job</a>
+                    <a href="{{ url_for('jobs') }}">All Jobs</a>
+                    <a href="{{ url_for('candidates') }}">All Candidates</a>
+                </div>
+                
+                <div class="nav-divider"></div>
+                
+                <!-- AI Tools -->
+                <a href="{{ url_for('rag_chat') }}" class="special-link">💬 AI Chat</a>
+                <a href="{{ url_for('agent_monitoring') }}" class="special-link">🤖 Agents</a>
             </div>
         </div>
     </nav>

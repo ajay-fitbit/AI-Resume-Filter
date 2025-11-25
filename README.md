@@ -128,11 +128,23 @@ The application will start on: **http://localhost:5000**
 2. Enter the job title and full job description
 3. Click **"Create Job Description"**
 
-### 3. Upload Resumes
+### 3. Upload Resumes (Two Modes)
+
+**Option A: Job-Based Upload**
 1. Click **"Upload Resumes"** in the navigation
 2. Select the job description from the dropdown
 3. Choose one or multiple resume files (PDF or DOCX)
 4. Click **"Process Resumes"**
+
+**Option B: Bulk Upload** 🆕
+1. Click **"Bulk Upload"** in the navigation
+2. Upload resumes without job descriptions
+3. AI automatically profiles candidates for best-fit roles:
+   - Full Stack Developer, DevOps Engineer, Data Scientist
+   - Cloud Architect, QA Engineer, Database Administrator
+   - Mobile Developer, AI/ML Engineer, Frontend/Backend Developer
+4. View comprehensive analysis with expandable skills badges
+5. Access from dashboard or dedicated Bulk Analysis page
 
 ### 4. View Results
 - The system will automatically:
@@ -154,16 +166,23 @@ The application will start on: **http://localhost:5000**
 ### 6. Chat with AI Assistant (RAG System) 🆕
 - Click **"💬 Resume Q&A"** in the navigation to access the AI chatbot
 - Ask questions in natural language:
-  - "Who is best for DevOps engineering?"
-  - "Find candidates with database skills"
-  - "Show me cloud experts"
-  - "List all Python developers with 5+ years experience"
+  - "Who is good fit for database roles?"
+  - "Find DevOps candidates"
+  - "Show me data scientists with 5+ years"
+  - "List all Python and React developers"
 - Features:
   - **AI-Powered Semantic Search** using SentenceTransformer model
+  - **Role-Based Intelligence**: Maps generic terms to relevant skills
+    * DevOps → Docker, Kubernetes, Jenkins, CI/CD, Terraform, Ansible
+    * Database → SQL, MySQL, PostgreSQL, MongoDB, Oracle
+    * Data Science → Python, R, SQL, Machine Learning, Pandas, Tableau
+    * BI → Power BI, Tableau, SQL, Excel, ETL, Data Analysis
   - **8 Query Types**: Greetings, Help, Count, Comparison, Profile, Recommendation, Listing, Search
   - **Chat History**: Persists across page refreshes (50 messages)
   - **Markdown Formatting**: Clean, readable responses
   - **Match Scores**: Shows relevance percentage (2 decimal places)
+  - **Resume Count Display**: Shows total indexed resumes and per-job counts
+  - **View Profile Button** 🆕: Click to see full candidate details with smart back navigation
 
 ### 7. Monitor Multi-Agent System
 - Click **"🤖 Agents"** in the navigation to access the monitoring dashboard
@@ -175,6 +194,16 @@ The application will start on: **http://localhost:5000**
   - Red flags detected
   - Extracted resume data
 
+### 8. Review Candidates with Collapsible View 🆕
+- **Bulk Analysis Page** now features:
+  - **Collapsible accordion rows**: Click any candidate row to expand/collapse full details
+  - **Expand All / Collapse All buttons**: Control all candidates at once
+  - Compact summary view: Name, experience, skills count, profile, red flags
+  - Full card view on expand: Complete profile, skills, red flags, actions
+- **Job-Based Candidates Page**:
+  - **Expandable Job Description**: Click "Show Full Description" to view complete JD
+  - Compact preview (first 200 chars) with toggle button
+
 ### 8. Manage Jobs and Candidates
 - Click **"All Jobs"** to view all job postings
 - View how many candidates applied for each
@@ -185,11 +214,24 @@ The application will start on: **http://localhost:5000**
 
 ## 🎯 Features
 
+### Dashboard Enhancements 🆕
+- ✅ **Candidate Analysis Briefs**: Quick access to bulk uploaded candidates
+  - Profile cards with AI-generated role recommendations
+  - Color-coded borders (red for flags, green for senior, blue default)
+  - Skills count and red flag indicators
+  - Direct links to full profiles
+- ✅ **Bulk Analysis Page**: Comprehensive candidate profiles
+  - Expandable skills badges (click "+X more" to show all)
+  - Detailed red flag breakdowns with severity levels
+  - Desktop and mobile optimized views
+  - Quick stats and filtering options
+
 ### Resume Download 🆕
 - ✅ Download original resume files from multiple locations:
-  - Dashboard (recent analyses)
+  - Dashboard (recent analyses and candidate briefs)
   - Candidates page (desktop & mobile views)
   - AI Chatbot results
+  - Bulk Analysis page
 - ✅ Secure file serving with proper filename format
 - ✅ Files served with original extension (.pdf, .docx, .doc)
 - ✅ Green download buttons for easy identification
@@ -209,11 +251,13 @@ The application will start on: **http://localhost:5000**
 
 ### Resume Parsing
 - ✅ Extracts name, email, phone
-- ✅ Identifies **160+ technical skills** across categories:
+- ✅ Identifies **100+ technical skills** across categories:
   - Programming: Python, Java, JavaScript, TypeScript, Go, Rust, Scala, R, etc.
   - AI/ML: LLM, RAG, Machine Learning, TensorFlow, PyTorch, OpenAI, GPT, BERT
-  - Cloud/DevOps: AWS, Azure, GCP, Docker, Kubernetes, CI/CD, Terraform
-  - Data: SQL, PostgreSQL, MongoDB, Snowflake, ETL, Power BI, Tableau
+  - Cloud/DevOps: AWS, Azure, GCP, Docker, Kubernetes, CI/CD, Terraform, Ansible
+  - Databases: PostgreSQL, MySQL, MongoDB, Oracle, MariaDB, Neo4j, InfluxDB, CouchDB, etc.
+  - SQL Languages: T-SQL, PL/SQL, Stored Procedures, Triggers, Views, Indexes
+  - BI Tools: Power BI, Tableau, QlikView, Qlik Sense, MicroStrategy, SSRS, SSIS, SSAS, DAX, Alteryx, Talend, Informatica, dbt, Airflow, etc.
   - And many more (see full list in `app/resume_parser.py`)
 - ✅ Calculates years of experience (supports "20 years of IT experience", date ranges, etc.)
 - ✅ Extracts education, certifications, projects
@@ -228,10 +272,12 @@ The application will start on: **http://localhost:5000**
 
 ### Red Flag Detection
 - ⚠️ Job hopping (average tenure < 2.5 years across 4+ jobs)
-- ⚠️ Career gaps (2+ year gaps between employment periods)
+- ⚠️ Career gaps (>1 year gaps with smart overlapping period merging)
+- ⚠️ Resume text validation (prevents false positives on empty resumes)
 - ⚠️ Missing required skills (from job description)
 - ⚠️ Irrelevant work experience (doesn't align with job)
 - ⚠️ Insufficient experience (below required years)
+- ⚠️ Severity levels (High, Medium) with detailed recommendations
 
 ### Ranking System
 - 🥇 **Top Tier**: 80-100% match

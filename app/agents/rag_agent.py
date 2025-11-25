@@ -117,11 +117,19 @@ class RAGAgent:
         
         question_lower = question.lower().strip()
         
+        print(f"[RAG Agent] ===== Processing Question =====")
+        print(f"[RAG Agent] Question: '{question}'")
+        print(f"[RAG Agent] Candidates available: {len(candidates)}")
+        
         # Detect query intent
         query_intent = self._detect_query_intent(question_lower)
+        print(f"[RAG Agent] Detected intent: {query_intent}")
         
         # Extract search intent and keywords from question first
         search_terms = self._extract_search_terms(question)
+        print(f"[RAG Agent] Extracted skills: {search_terms['skills']}")
+        print(f"[RAG Agent] Extracted keywords: {search_terms['keywords'][:10] if len(search_terms['keywords']) > 10 else search_terms['keywords']}")
+        print(f"[RAG Agent] Experience requirement: {search_terms['experience_years']} years" if search_terms['experience_years'] else "")
         
         # Handle different query types
         
@@ -138,9 +146,9 @@ class RAGAgent:
         if is_count_query:
             return self._handle_count_query(candidates, search_terms, question)
         
-        # 4. Specific person query - check before other intents
-        # Detect if question contains a name by checking against candidate names
-        if query_intent == 'specific_person' or self._contains_candidate_name(question_lower, candidates):
+        # 4. Specific person query - only if name is actually in question
+        # Check candidate names FIRST, before using intent pattern
+        if self._contains_candidate_name(question_lower, candidates):
             return self._handle_specific_person_query(candidates, question)
         
         # 5. Comparison queries (best, top, strongest)
@@ -194,25 +202,35 @@ class RAGAgent:
                 skills.append(full_name)
         
         # Handle broader terms that map to multiple skills
-        if re.search(r'\b(cloud|cloud platform|cloud computing)\b', question_lower):
-            if 'AWS' not in skills:
-                skills.append('AWS')
-            if 'Azure' not in skills:
-                skills.append('Azure')
-            if 'Google Cloud' not in skills:
-                skills.append('Google Cloud')
+        if re.search(r'\b(cloud|cloud platform|cloud computing|cloud engineer|cloud architect)\b', question_lower):
+            skills.extend(['AWS', 'Azure', 'Google Cloud', 'GCP', 'Docker', 'Kubernetes'])
         
-        if re.search(r'\b(database|databases|db)\b', question_lower):
-            if 'SQL' not in skills:
-                skills.append('SQL')
-            if 'MongoDB' not in skills:
-                skills.append('MongoDB')
+        if re.search(r'\b(database|databases|db|dba|database admin)\b', question_lower):
+            skills.extend(['SQL', 'MySQL', 'PostgreSQL', 'MongoDB', 'Oracle'])
         
-        if re.search(r'\b(frontend|front-end|front end)\b', question_lower):
-            skills.extend(['React', 'JavaScript', 'HTML', 'CSS'])
+        if re.search(r'\b(frontend|front-end|front end|ui|user interface)\b', question_lower):
+            skills.extend(['React', 'Angular', 'Vue.js', 'JavaScript', 'TypeScript', 'HTML', 'CSS'])
         
-        if re.search(r'\b(backend|back-end|back end)\b', question_lower):
-            skills.extend(['Python', 'Java', 'Node.js', 'SQL'])
+        if re.search(r'\b(backend|back-end|back end|server|server-side)\b', question_lower):
+            skills.extend(['Python', 'Java', 'Node.js', 'SQL', 'REST API'])
+        
+        if re.search(r'\b(devops|dev ops|devsecops|sre|site reliability)\b', question_lower):
+            skills.extend(['Docker', 'Kubernetes', 'Jenkins', 'CI/CD', 'Terraform', 'Ansible', 'AWS'])
+        
+        if re.search(r'\b(testing|qa|quality assurance|test|tester)\b', question_lower):
+            skills.extend(['Testing', 'QA', 'Selenium', 'Automated Testing', 'Manual Testing'])
+        
+        if re.search(r'\b(data science|data scientist|data analyst|data analysis|analytics)\b', question_lower):
+            skills.extend(['Python', 'R', 'SQL', 'Machine Learning', 'Pandas', 'NumPy', 'Tableau'])
+        
+        if re.search(r'\b(machine learning|ml engineer|ai|artificial intelligence|deep learning)\b', question_lower):
+            skills.extend(['Machine Learning', 'Python', 'TensorFlow', 'PyTorch', 'Scikit-learn', 'AI'])
+        
+        if re.search(r'\b(fullstack|full stack|full-stack)\b', question_lower):
+            skills.extend(['React', 'Node.js', 'JavaScript', 'Python', 'SQL', 'MongoDB', 'REST API'])
+        
+        if re.search(r'\b(bi|business intelligence|reporting|power bi|tableau)\b', question_lower):
+            skills.extend(['Power BI', 'Tableau', 'SQL', 'Excel', 'Data Analysis', 'ETL'])
         
         # Extract experience years
         experience_years = None
@@ -263,6 +281,8 @@ class RAGAgent:
         
         print(f"[RAG Agent] Search terms extracted: skills={search_terms['skills']}, keywords={search_terms['keywords'][:5] if len(search_terms['keywords']) > 5 else search_terms['keywords']}")
         print(f"[RAG Agent] AI semantic matching: {'Enabled' if question_embedding is not None else 'Disabled (using keywords only)'}")
+        if search_terms['experience_years']:
+            print(f"[RAG Agent] Experience filter: Minimum {search_terms['experience_years']} years required")
         
         for candidate in candidates:
             score = 0
@@ -272,6 +292,13 @@ class RAGAgent:
             candidate_skills = candidate.get('skills', '').lower()
             candidate_experience = candidate.get('experience', '').lower()
             candidate_summary = candidate.get('summary', '').lower()
+            
+            # HARD FILTER: Check experience requirement first
+            if search_terms['experience_years']:
+                candidate_years = self._extract_years_experience(candidate_experience)
+                if not candidate_years or candidate_years < search_terms['experience_years']:
+                    print(f"[RAG Agent] {candidate.get('name')}: Excluded - has {candidate_years} years, need {search_terms['experience_years']}+ years")
+                    continue  # Skip this candidate entirely
             
             # Combine all candidate text for keyword matching
             candidate_text = f"{candidate_skills} {candidate_experience} {candidate_summary}".lower()
@@ -290,11 +317,14 @@ class RAGAgent:
                     score += 20  # Medium weight for fuzzy skill match
                     matched_skills.append(skill)
             
-            # Score based on experience years
+            # Bonus score for meeting/exceeding experience requirement
             if search_terms['experience_years']:
                 candidate_years = self._extract_years_experience(candidate_experience)
                 if candidate_years and candidate_years >= search_terms['experience_years']:
-                    score += 25
+                    score += 25  # Bonus for meeting requirement
+                    # Additional bonus for significantly more experience
+                    if candidate_years >= search_terms['experience_years'] * 1.5:
+                        score += 10
             
             # Score based on keyword matches in all text (only if we have skill matches)
             keyword_score = 0
@@ -344,9 +374,10 @@ class RAGAgent:
                         score += 15
             
             # Only include candidates with skill matches when skills are requested
-            # If skills in query: require at least 20 points (fuzzy skill match)
-            # If no skills in query: allow keyword-based matching with 25 point threshold
-            min_threshold = 20 if search_terms['skills'] else 25
+            # If skills in query: require at least 15 points (fuzzy skill match)
+            # If no skills in query: allow keyword-based matching with 20 point threshold
+            # For AI semantic matching, be more lenient (10 points)
+            min_threshold = 15 if search_terms['skills'] else (10 if semantic_score > 0 else 20)
             if score >= min_threshold:
                 semantic_info = f", semantic={semantic_score:.1f}" if semantic_score > 0 else ""
                 print(f"[RAG Agent] {candidate.get('name')}: score={score:.1f}{semantic_info}, matched_skills={matched_skills}")
@@ -413,8 +444,17 @@ class RAGAgent:
     
     def _contains_candidate_name(self, question: str, candidates: List[Dict[str, Any]]) -> bool:
         """Check if the question contains a candidate's name"""
+        # First check if question has role/skill keywords - if so, it's NOT a specific person query
+        role_keywords = ['role', 'position', 'job', 'engineer', 'developer', 'analyst', 'scientist', 
+                        'manager', 'architect', 'specialist', 'consultant', 'devops', 'qa', 'tester',
+                        'skills', 'experience', 'knows', 'knowledge']
+        
+        for keyword in role_keywords:
+            if re.search(r'\b' + re.escape(keyword) + r'\b', question.lower()):
+                return False  # This is a skills/role query, not a person query
+        
         # Remove common words
-        question_clean = re.sub(r'\b(show|me|tell|about|who|is|the|profile|full|information|details)\b', '', question)
+        question_clean = re.sub(r'\b(show|me|tell|about|who|is|the|profile|full|information|details|good|best|for)\b', '', question)
         question_clean = question_clean.strip()
         
         # Check if at least 2 consecutive words match a candidate name

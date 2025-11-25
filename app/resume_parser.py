@@ -127,6 +127,11 @@ class ResumeParser:
             # Databases
             'SQL', 'MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Oracle', 'SQL Server',
             'Cassandra', 'DynamoDB', 'ElasticSearch', 'Snowflake', 'Redshift', 'BigQuery',
+            'MariaDB', 'DB2', 'SQLite', 'CouchDB', 'Neo4j', 'InfluxDB', 'TimescaleDB',
+            'HBase', 'Amazon RDS', 'Azure SQL', 'Cosmos DB', 'Firebase', 'Supabase',
+            'PlanetScale', 'CockroachDB', 'ClickHouse', 'Vertica', 'Greenplum',
+            'T-SQL', 'TSQL', 'PL/SQL', 'PLSQL', 'PL-SQL', 'MySQL Workbench', 'pgAdmin',
+            'SQL Developer', 'Stored Procedures', 'Triggers', 'Views', 'Indexes',
             
             # Cloud & DevOps
             'AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes', 'Jenkins', 'CI/CD', 'DevOps',
@@ -161,7 +166,13 @@ class ResumeParser:
             
             # Data & Analytics
             'ETL', 'Data Warehouse', 'Data Pipeline', 'Big Data', 'Hadoop', 'Spark', 'Kafka',
-            'Tableau', 'Power BI', 'Looker', 'Qlik', 'Excel',
+            'Tableau', 'Power BI', 'Looker', 'Qlik', 'QlikView', 'Qlik Sense', 'Excel',
+            'MicroStrategy', 'SAP BusinessObjects', 'Cognos', 'SSRS', 'SSIS', 'SSAS',
+            'DAX', 'Power Query', 'Data Modeling', 'Data Visualization', 'Alteryx',
+            'Talend', 'Informatica', 'Pentaho', 'dbt', 'Airflow', 'Dagster', 'Prefect',
+            'Azure Data Factory', 'AWS Glue', 'Fivetran', 'Stitch', 'Metabase', 'Superset',
+            'Redash', 'Google Data Studio', 'Mode Analytics', 'Sisense', 'Domo',
+            'Dataiku', 'Databricks', 'Synapse Analytics', 'Azure Synapse',
             
             # Web Servers & Tools
             'Nginx', 'Apache', 'Tomcat', 'IIS',

@@ -17,7 +17,9 @@
             </p>
         </div>
         <div style="display: flex; gap: 0.5rem;">
-            <a href="{{ url_for('candidates') }}" class="btn btn-secondary">← Back to List</a>
+            <a href="{% if request.args.get('from') == 'bulk_analysis' %}{{ url_for('bulk_analysis') }}{% elif request.args.get('from') == 'dashboard' %}{{ url_for('index') }}{% elif request.args.get('from') == 'rag_chat' %}{{ url_for('rag_chat') }}{% else %}{{ url_for('candidates') }}{% endif %}" class="btn btn-secondary">
+                ← Back to {% if request.args.get('from') == 'bulk_analysis' %}Analysis{% elif request.args.get('from') == 'dashboard' %}Dashboard{% elif request.args.get('from') == 'rag_chat' %}AI Chat{% else %}List{% endif %}
+            </a>
             <form method="POST" action="{{ url_for('delete_candidate', candidate_id=candidate.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete {{ candidate.name }}? This will permanently remove all their data including resume and analysis results.');">
                 <button type="submit" class="btn" style="background: #dc3545; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: 600;">
                     🗑️ Delete Candidate
@@ -112,26 +114,168 @@
 
 {% if red_flags %}
 <div class="card" style="border-left: 4px solid #dc3545;">
-    <h3 style="margin-bottom: 1.5rem; color: #dc3545;">🚩 Red Flags Detected</h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 style="color: #dc3545; margin: 0;">🚩 Red Flags Analysis</h3>
+        <div style="display: flex; gap: 1rem;">
+            <div style="text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #dc3545;">
+                    {{ red_flags | selectattr('severity', 'equalto', 'High') | list | length }}
+                </div>
+                <div style="font-size: 0.8rem; color: #6c757d;">High Severity</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #ffc107;">
+                    {{ red_flags | selectattr('severity', 'equalto', 'Medium') | list | length }}
+                </div>
+                <div style="font-size: 0.8rem; color: #6c757d;">Medium</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #6c757d;">
+                    {{ red_flags | length }}
+                </div>
+                <div style="font-size: 0.8rem; color: #6c757d;">Total</div>
+            </div>
+        </div>
+    </div>
     
-    <div style="display: grid; gap: 1rem;">
+    <div style="background: #fff3cd; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 3px solid #ffc107;">
+        <strong style="color: #856404;">⚠️ Review Carefully:</strong>
+        <span style="color: #856404;">
+            These red flags have been automatically detected by our AI system. Please review each flag in the context of the role requirements.
+        </span>
+    </div>
+    
+    <div style="display: grid; gap: 1.5rem;">
         {% for flag in red_flags %}
-        <div style="padding: 1rem; background: {% if flag.severity == 'High' %}#f8d7da{% else %}#fff3cd{% endif %}; border-radius: 8px; border-left: 3px solid {% if flag.severity == 'High' %}#dc3545{% else %}#ffc107{% endif %};">
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                <strong style="color: #495057;">{{ flag.flag_type }}</strong>
-                <span class="badge {% if flag.severity == 'High' %}badge-danger{% else %}badge-warning{% endif %}">
-                    {{ flag.severity }}
+        <div style="background: white; border: 2px solid {% if flag.severity == 'High' %}#dc3545{% elif flag.severity == 'Medium' %}#ffc107{% else %}#6c757d{% endif %}; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <!-- Header -->
+            <div style="background: {% if flag.severity == 'High' %}linear-gradient(135deg, #dc3545 0%, #c82333 100%){% elif flag.severity == 'Medium' %}linear-gradient(135deg, #ffc107 0%, #e0a800 100%){% else %}linear-gradient(135deg, #6c757d 0%, #5a6268 100%){% endif %}; color: white; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.5rem;">
+                        {% if flag.severity == 'High' %}🚨{% elif flag.severity == 'Medium' %}⚠️{% else %}ℹ️{% endif %}
+                    </span>
+                    <div>
+                        <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.25rem;">
+                            {{ flag.flag_type }}
+                        </div>
+                        <div style="font-size: 0.85rem; opacity: 0.9;">
+                            Detected: {{ flag.created_at.strftime('%B %d, %Y at %I:%M %p') if flag.created_at else 'N/A' }}
+                        </div>
+                    </div>
+                </div>
+                <span style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 20px; font-weight: bold; font-size: 0.9rem;">
+                    {{ flag.severity }} Severity
                 </span>
             </div>
-            <p style="color: #495057; margin: 0;">{{ flag.description }}</p>
+            
+            <!-- Content -->
+            <div style="padding: 1.5rem;">
+                <div style="margin-bottom: 1rem;">
+                    <h4 style="color: #2d3748; font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                        📝 Description
+                    </h4>
+                    <p style="color: #495057; line-height: 1.7; margin: 0; font-size: 1rem;">
+                        {{ flag.description }}
+                    </p>
+                </div>
+                
+                {% if flag.severity == 'High' %}
+                <div style="background: #fff3cd; border-left: 3px solid #ffc107; padding: 1rem; border-radius: 6px;">
+                    <strong style="color: #856404; font-size: 0.9rem;">💡 Recommendation:</strong>
+                    <p style="color: #856404; margin: 0.5rem 0 0 0; font-size: 0.9rem; line-height: 1.5;">
+                        {% if 'Job Hopping' in flag.flag_type or 'Frequent' in flag.flag_type %}
+                        Consider discussing career stability and long-term commitment during the interview. Ask about reasons for job changes and future career goals.
+                        {% elif 'Gap' in flag.flag_type %}
+                        Inquire about the employment gap to understand the circumstances. Many gaps have valid explanations such as education, family care, or personal development.
+                        {% elif 'Minimal Experience' in flag.flag_type %}
+                        Assess if the candidate's skills and potential can compensate for limited experience. Consider for junior or training positions.
+                        {% elif 'Missing' in flag.flag_type %}
+                        Evaluate if the candidate can acquire missing skills through training or if they have transferable skills that could be valuable.
+                        {% else %}
+                        Further investigation recommended during the interview process to understand the full context.
+                        {% endif %}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Footer -->
+            <div style="background: #f8f9fa; padding: 0.75rem 1.5rem; border-top: 1px solid #e9ecef; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 0.85rem; color: #6c757d;">
+                    <span style="margin-right: 1rem;">
+                        🤖 <strong>Detection Method:</strong> AI Multi-Agent Analysis
+                    </span>
+                    <span>
+                        📊 <strong>Confidence:</strong> 
+                        {% if flag.severity == 'High' %}High{% elif flag.severity == 'Medium' %}Medium{% else %}Low{% endif %}
+                    </span>
+                </div>
+                <div style="font-size: 0.85rem; color: #6c757d;">
+                    ID: #{{ flag.id }}
+                </div>
+            </div>
         </div>
         {% endfor %}
     </div>
+    
+    <!-- Summary Footer -->
+    <div style="margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 8px;">
+        <h4 style="color: #2d3748; margin-bottom: 1rem;">📊 Red Flags Summary</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+            <div>
+                <strong style="color: #6c757d; font-size: 0.9rem;">Total Flags:</strong>
+                <div style="font-size: 1.3rem; font-weight: bold; color: #2d3748;">{{ red_flags | length }}</div>
+            </div>
+            <div>
+                <strong style="color: #6c757d; font-size: 0.9rem;">Risk Level:</strong>
+                <div style="font-size: 1.3rem; font-weight: bold;">
+                    {% if red_flags | selectattr('severity', 'equalto', 'High') | list | length > 0 %}
+                        <span style="color: #dc3545;">High Risk ⚠️</span>
+                    {% elif red_flags | selectattr('severity', 'equalto', 'Medium') | list | length > 0 %}
+                        <span style="color: #ffc107;">Medium Risk ⚡</span>
+                    {% else %}
+                        <span style="color: #28a745;">Low Risk ✓</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                <strong style="color: #6c757d; font-size: 0.9rem;">Action Required:</strong>
+                <div style="font-size: 1.3rem; font-weight: bold;">
+                    {% if red_flags | selectattr('severity', 'equalto', 'High') | list | length > 0 %}
+                        <span style="color: #dc3545;">Review Before Interview</span>
+                    {% else %}
+                        <span style="color: #28a745;">Standard Process</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% else %}
-<div class="card" style="background: #d4edda; border-left: 4px solid #28a745;">
-    <h3 style="color: #28a745; margin-bottom: 0.5rem;">✅ No Red Flags</h3>
-    <p style="color: #155724;">This candidate has a clean profile with no detected red flags.</p>
+<div class="card" style="background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border-left: 4px solid #28a745;">
+    <div style="text-align: center; padding: 2rem;">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
+        <h3 style="color: #28a745; margin-bottom: 1rem;">No Red Flags Detected</h3>
+        <p style="color: #155724; font-size: 1.1rem; line-height: 1.6; margin-bottom: 1.5rem;">
+            This candidate has a clean profile with no detected red flags. Our AI multi-agent system has thoroughly analyzed the resume and found no concerning patterns.
+        </p>
+        <div style="background: white; padding: 1rem; border-radius: 8px; display: inline-block;">
+            <div style="display: flex; gap: 2rem; align-items: center;">
+                <div>
+                    <div style="font-size: 0.85rem; color: #6c757d; margin-bottom: 0.25rem;">Job Hopping</div>
+                    <div style="font-weight: bold; color: #28a745;">✓ Clear</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.85rem; color: #6c757d; margin-bottom: 0.25rem;">Career Gaps</div>
+                    <div style="font-weight: bold; color: #28a745;">✓ Clear</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.85rem; color: #6c757d; margin-bottom: 0.25rem;">Experience</div>
+                    <div style="font-weight: bold; color: #28a745;">✓ Clear</div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endif %}
 {% endblock %}

@@ -1,0 +1,465 @@
+{% extends "base.html" %}
+
+{% block title %}Candidate Analysis - AI Resume Filter{% endblock %}
+
+{% block content %}
+<h2 style="color: white; margin-bottom: 2rem;">📊 Comprehensive Candidate Analysis</h2>
+
+<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 2rem;">
+    <h3 style="margin-bottom: 1rem;">💡 About This View</h3>
+    <p style="opacity: 0.95; line-height: 1.6;">
+        This page shows detailed analysis of all candidates uploaded through <strong>Bulk Upload</strong>. 
+        Each candidate has been processed by our AI multi-agent system to extract skills, assess experience, 
+        detect red flags, and determine role suitability - all independent of specific job descriptions.
+    </p>
+</div>
+
+{% if candidates %}
+<div class="card" style="background: #f8f9fa; margin-bottom: 2rem;">
+    <h4 style="margin-bottom: 1rem;">📈 Quick Stats</h4>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+        <div style="text-align: center; padding: 1rem; background: white; border-radius: 8px;">
+            <div style="font-size: 2rem; font-weight: bold; color: #667eea;">{{ candidates|length }}</div>
+            <div style="color: #6c757d; font-size: 0.9rem;">Total Candidates</div>
+        </div>
+        <div style="text-align: center; padding: 1rem; background: white; border-radius: 8px;">
+            <div style="font-size: 2rem; font-weight: bold; color: #28a745;">
+                {{ candidates | selectattr('experience_years', 'ge', 5) | list | length }}
+            </div>
+            <div style="color: #6c757d; font-size: 0.9rem;">Senior Level (5+ yrs)</div>
+        </div>
+        <div style="text-align: center; padding: 1rem; background: white; border-radius: 8px;">
+            <div style="font-size: 2rem; font-weight: bold; color: #ffc107;">
+                {{ candidates | rejectattr('high_flags', 'equalto', 0) | list | length }}
+            </div>
+            <div style="color: #6c757d; font-size: 0.9rem;">With Red Flags</div>
+        </div>
+        <div style="text-align: center; padding: 1rem; background: white; border-radius: 8px;">
+            <div style="font-size: 2rem; font-weight: bold; color: #17a2b8;">
+                {{ (candidates | map(attribute='skills_count') | sum / candidates|length) | round(0) | int if candidates else 0 }}
+            </div>
+            <div style="color: #6c757d; font-size: 0.9rem;">Avg. Skills Per Candidate</div>
+        </div>
+    </div>
+</div>
+
+<!-- Collapse/Expand All Controls -->
+<div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-bottom: 1rem;">
+    <button onclick="expandAll()" class="btn" style="background: #667eea; color: white; border: none; padding: 0.6rem 1.25rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.3s;" onmouseover="this.style.background='#5568d3'" onmouseout="this.style.background='#667eea'">
+        ➕ Expand All
+    </button>
+    <button onclick="collapseAll()" class="btn" style="background: #6c757d; color: white; border: none; padding: 0.6rem 1.25rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.3s;" onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">
+        ➖ Collapse All
+    </button>
+</div>
+
+<!-- Desktop/Tablet View -->
+<div class="desktop-table">
+    {% for candidate in candidates %}
+    <div class="card" style="margin-bottom: 0.75rem; border-left: 4px solid {% if candidate.high_flags > 0 %}#dc3545{% elif candidate.experience_years >= 5 %}#28a745{% else %}#667eea{% endif %}; padding: 0; overflow: hidden;">
+        <!-- Collapsed Header (Always Visible) -->
+        <div onclick="toggleCandidate({{ candidate.id }})" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(102, 126, 234, 0.05)'" onmouseout="this.style.background='white'">
+            <div style="display: flex; align-items: center; gap: 1.5rem; flex: 1;">
+                <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; font-weight: bold; flex-shrink: 0;">
+                    {{ candidate.name[0].upper() }}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <h4 style="margin: 0 0 0.25rem 0; color: #2d3748; font-size: 1.1rem;">{{ candidate.name }}</h4>
+                    <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+                        <span style="color: #6c757d; font-size: 0.9rem;">
+                            <strong style="color: #667eea;">{{ candidate.experience_years }}</strong> years exp
+                        </span>
+                        <span style="color: #6c757d; font-size: 0.9rem;">•</span>
+                        <span style="color: #6c757d; font-size: 0.9rem;">
+                            <strong style="color: #667eea;">{{ candidate.skills_count }}</strong> skills
+                        </span>
+                        <span style="color: #6c757d; font-size: 0.9rem;">•</span>
+                        <span style="color: #6c757d; font-size: 0.9rem;">
+                            💼 {{ candidate.profile }}
+                        </span>
+                        {% if candidate.total_flags > 0 %}
+                        <span style="color: #6c757d; font-size: 0.9rem;">•</span>
+                        <span style="background: {% if candidate.high_flags > 0 %}#fff3cd{% else %}#e7f3ff{% endif %}; padding: 0.25rem 0.6rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600; color: {% if candidate.high_flags > 0 %}#856404{% else %}#004085{% endif %};">
+                            🚩 {{ candidate.total_flags }} flag(s)
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div id="toggle-icon-{{ candidate.id }}" style="color: #667eea; font-size: 1.5rem; font-weight: bold; transition: transform 0.3s; flex-shrink: 0;">
+                +
+            </div>
+        </div>
+        
+        <!-- Expanded Details (Hidden by default) -->
+        <div id="details-{{ candidate.id }}" style="display: none; padding: 0 1.5rem 1.5rem 1.5rem; border-top: 1px solid #e9ecef;">
+            <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 2rem; align-items: start; padding-top: 1.5rem;">
+            <!-- Column 1: Basic Info -->
+            <div>
+                <div style="margin-bottom: 1rem;">
+                    <small style="color: #6c757d;">Added {{ candidate.created_at.strftime('%b %d, %Y') }}</small>
+                </div>
+                
+                <div style="margin-bottom: 0.75rem;">
+                    <div style="color: #6c757d; font-size: 0.85rem; margin-bottom: 0.25rem;">📧 Email</div>
+                    <div style="font-size: 0.9rem;">{{ candidate.email or 'Not provided' }}</div>
+                </div>
+                
+                <div style="margin-bottom: 0.75rem;">
+                    <div style="color: #6c757d; font-size: 0.85rem; margin-bottom: 0.25rem;">📞 Phone</div>
+                    <div style="font-size: 0.9rem;">{{ candidate.phone or 'Not provided' }}</div>
+                </div>
+                
+                <div style="margin-bottom: 0.75rem;">
+                    <div style="color: #6c757d; font-size: 0.85rem; margin-bottom: 0.25rem;">⏱️ Experience</div>
+                    <div style="font-size: 1.2rem; font-weight: bold; color: #667eea;">
+                        {{ candidate.experience_years }} years
+                    </div>
+                </div>
+                
+                <div>
+                    <div style="color: #6c757d; font-size: 0.85rem; margin-bottom: 0.25rem;">🎓 Education</div>
+                    <div style="font-size: 0.9rem;">{{ candidate.education or 'Not specified' }}</div>
+                </div>
+            </div>
+            
+            <!-- Column 2: Skills & Profile -->
+            <div>
+                <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <h5 style="color: #667eea; margin-bottom: 0.5rem;">💼 Best Fit For</h5>
+                    <div style="font-size: 1.1rem; font-weight: 600; color: #2d3748;">
+                        {{ candidate.profile }}
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <h5 style="color: #2d3748; margin-bottom: 0.75rem;">🎯 Technical Skills ({{ candidate.skills_count }})</h5>
+                    <div id="skills-desktop-{{ candidate.id }}" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                        {% if candidate.skills_list %}
+                            {% for skill in candidate.skills_list[:15] %}
+                                <span class="skill-badge-visible" style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 0.4rem 0.75rem; border-radius: 6px; font-size: 0.85rem; color: #495057;">
+                                    {{ skill }}
+                                </span>
+                            {% endfor %}
+                            {% for skill in candidate.skills_list[15:] %}
+                                <span class="skill-badge-hidden" style="display: none; background: #f8f9fa; border: 1px solid #e9ecef; padding: 0.4rem 0.75rem; border-radius: 6px; font-size: 0.85rem; color: #495057;">
+                                    {{ skill }}
+                                </span>
+                            {% endfor %}
+                            {% if candidate.skills_count > 15 %}
+                                <span onclick="toggleSkills('desktop', {{ candidate.id }})" class="more-badge" style="background: #667eea; color: white; padding: 0.4rem 0.75rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='#5568d3'" onmouseout="this.style.background='#667eea'">
+                                    +{{ candidate.skills_count - 15 }} more
+                                </span>
+                            {% endif %}
+                        {% else %}
+                            <span style="color: #6c757d; font-style: italic;">No skills extracted</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if candidate.certifications and candidate.certifications != 'None' %}
+                <div>
+                    <h5 style="color: #2d3748; margin-bottom: 0.5rem;">🏆 Certifications</h5>
+                    <div style="font-size: 0.9rem; color: #495057; line-height: 1.6;">
+                        {{ candidate.certifications }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Column 3: Red Flags & Actions -->
+            <div>
+                <div style="background: {% if candidate.high_flags > 0 %}#fff3cd{% elif candidate.total_flags > 0 %}#e7f3ff{% else %}#d4edda{% endif %}; padding: 1rem; border-radius: 8px; border-left: 3px solid {% if candidate.high_flags > 0 %}#ffc107{% elif candidate.total_flags > 0 %}#17a2b8{% else %}#28a745{% endif %}; margin-bottom: 1rem;">
+                    <h5 style="color: #2d3748; margin-bottom: 0.75rem;">🚩 Red Flags Analysis</h5>
+                    
+                    {% if candidate.total_flags > 0 %}
+                        <div style="margin-bottom: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <span style="font-size: 0.85rem; color: #6c757d;">High Severity</span>
+                                <span style="font-weight: bold; color: #dc3545; font-size: 1.1rem;">{{ candidate.high_flags }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <span style="font-size: 0.85rem; color: #6c757d;">Medium Severity</span>
+                                <span style="font-weight: bold; color: #ffc107; font-size: 1.1rem;">{{ candidate.medium_flags }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.85rem; color: #6c757d;">Total Flags</span>
+                                <span style="font-weight: bold; color: #6c757d; font-size: 1.1rem;">{{ candidate.total_flags }}</span>
+                            </div>
+                        </div>
+                        
+                        {% if candidate.red_flags_list %}
+                        <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(0,0,0,0.1);">
+                            <div style="font-size: 0.85rem; color: #6c757d; font-weight: bold; margin-bottom: 0.5rem;">⚠️ Detected Issues:</div>
+                            {% for flag in candidate.red_flags_list[:4] %}
+                                <div style="background: {% if flag.severity == 'High' %}rgba(220, 53, 69, 0.1){% else %}rgba(255, 193, 7, 0.1){% endif %}; padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem; border-left: 3px solid {% if flag.severity == 'High' %}#dc3545{% else %}#ffc107{% endif %};">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                        <span class="badge" style="font-size: 0.7rem; padding: 0.2rem 0.5rem; {% if flag.severity == 'High' %}background: #dc3545{% else %}background: #ffc107; color: #212529{% endif %};">
+                                            {{ flag.severity }}
+                                        </span>
+                                        <strong style="font-size: 0.85rem; color: #2d3748;">{{ flag.flag_type }}</strong>
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: #495057; line-height: 1.4;">
+                                        {{ flag.description }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            {% if candidate.total_flags > 4 %}
+                                <div style="text-align: center; margin-top: 0.5rem;">
+                                    <a href="{{ url_for('candidate_detail', candidate_id=candidate.id, from='bulk_analysis') }}" style="color: #667eea; font-size: 0.85rem; text-decoration: none;">
+                                        View {{ candidate.total_flags - 4 }} more flag(s) →
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div style="text-align: center; padding: 1rem;">
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">✓</div>
+                            <div style="font-weight: 600; color: #28a745;">Clean Profile</div>
+                            <div style="font-size: 0.85rem; color: #6c757d; margin-top: 0.25rem;">No red flags detected</div>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <a href="{{ url_for('candidate_detail', candidate_id=candidate.id, from='bulk_analysis') }}" class="btn btn-primary" style="text-align: center; padding: 0.75rem;">
+                        📋 Full Details
+                    </a>
+                    <a href="{{ url_for('download_resume', candidate_id=candidate.id) }}" class="btn" style="text-align: center; padding: 0.75rem; background: #28a745; color: white; border: none; border-radius: 8px; text-decoration: none;">
+                        📥 Download Resume
+                    </a>
+                    <form method="POST" action="{{ url_for('delete_candidate', candidate_id=candidate.id) }}" onsubmit="return confirm('Delete {{ candidate.name }}? This will remove all their data.');">
+                        <button type="submit" class="btn" style="width: 100%; padding: 0.75rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                            🗑️ Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Mobile View -->
+<div class="mobile-cards">
+    {% for candidate in candidates %}
+    <div class="mobile-card" style="border-left: 4px solid {% if candidate.high_flags > 0 %}#dc3545{% elif candidate.experience_years >= 5 %}#28a745{% else %}#667eea{% endif %}; padding: 0; overflow: hidden;">
+        <!-- Collapsed Header (Always Visible) -->
+        <div onclick="toggleCandidate({{ candidate.id }})" style="padding: 1rem; cursor: pointer; transition: background 0.2s;" ontouchstart="this.style.background='rgba(102, 126, 234, 0.05)'" ontouchend="this.style.background='white'">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.3rem; font-weight: bold; flex-shrink: 0;">
+                    {{ candidate.name[0].upper() }}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <h4 style="margin: 0 0 0.25rem 0; color: #212529; font-size: 1rem;">{{ candidate.name }}</h4>
+                    <div style="color: #6c757d; font-size: 0.85rem;">
+                        <strong style="color: #667eea;">{{ candidate.experience_years }}</strong> years • 
+                        <strong style="color: #667eea;">{{ candidate.skills_count }}</strong> skills
+                        {% if candidate.total_flags > 0 %}
+                        • 🚩 <strong style="color: {% if candidate.high_flags > 0 %}#dc3545{% else %}#ffc107{% endif %};">{{ candidate.total_flags }}</strong>
+                        {% endif %}
+                    </div>
+                </div>
+                <div id="toggle-icon-{{ candidate.id }}" style="color: #667eea; font-size: 1.5rem; font-weight: bold; transition: transform 0.3s; flex-shrink: 0;">
+                    +
+                </div>
+            </div>
+        </div>
+        
+        <!-- Expanded Details (Hidden by default) -->
+        <div id="details-{{ candidate.id }}" style="display: none; padding: 0 1rem 1rem 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+            <div style="padding-top: 1rem;">
+            <div style="text-align: center; margin-bottom: 1rem;">
+                <div style="color: #6c757d; font-size: 0.9rem; margin-bottom: 0.5rem;">{{ candidate.email or 'No email' }}</div>
+            </div>
+        
+        <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+            <div style="color: #667eea; font-weight: bold; font-size: 0.85rem; margin-bottom: 0.5rem;">💼 BEST FIT FOR</div>
+            <div style="font-size: 1rem; font-weight: 600; color: #2d3748;">{{ candidate.profile }}</div>
+        </div>
+        
+        <div style="margin-bottom: 1rem;">
+            <div style="color: #6c757d; font-weight: bold; font-size: 0.85rem; margin-bottom: 0.5rem;">🎯 Skills ({{ candidate.skills_count }})</div>
+            <div id="skills-mobile-{{ candidate.id }}" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                {% if candidate.skills_list %}
+                    {% for skill in candidate.skills_list[:10] %}
+                        <span class="skill-badge-visible" style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.75rem; color: #495057;">
+                            {{ skill }}
+                        </span>
+                    {% endfor %}
+                    {% for skill in candidate.skills_list[10:] %}
+                        <span class="skill-badge-hidden" style="display: none; background: #f8f9fa; border: 1px solid #e9ecef; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.75rem; color: #495057;">
+                            {{ skill }}
+                        </span>
+                    {% endfor %}
+                    {% if candidate.skills_count > 10 %}
+                        <span onclick="toggleSkills('mobile', {{ candidate.id }})" class="more-badge" style="background: #667eea; color: white; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='#5568d3'" onmouseout="this.style.background='#667eea'">
+                            +{{ candidate.skills_count - 10 }} more
+                        </span>
+                    {% endif %}
+                {% else %}
+                    <span style="color: #6c757d; font-style: italic; font-size: 0.85rem;">No skills extracted</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="background: {% if candidate.high_flags > 0 %}#fff3cd{% elif candidate.total_flags > 0 %}#e7f3ff{% else %}#d4edda{% endif %}; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+            <div style="color: #2d3748; font-weight: bold; font-size: 0.85rem; margin-bottom: 0.75rem;">🚩 Red Flags Analysis</div>
+            {% if candidate.total_flags > 0 %}
+                <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                    <div style="flex: 1; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #dc3545;">{{ candidate.high_flags }}</div>
+                        <div style="font-size: 0.75rem; color: #6c757d;">High</div>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #ffc107;">{{ candidate.medium_flags }}</div>
+                        <div style="font-size: 0.75rem; color: #6c757d;">Medium</div>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #6c757d;">{{ candidate.total_flags }}</div>
+                        <div style="font-size: 0.75rem; color: #6c757d;">Total</div>
+                    </div>
+                </div>
+                
+                {% if candidate.red_flags_list %}
+                <div style="padding-top: 0.75rem; border-top: 1px solid rgba(0,0,0,0.1);">
+                    <div style="font-size: 0.8rem; color: #6c757d; font-weight: bold; margin-bottom: 0.5rem;">⚠️ Issues Detected:</div>
+                    {% for flag in candidate.red_flags_list[:2] %}
+                        <div style="background: {% if flag.severity == 'High' %}rgba(220, 53, 69, 0.15){% else %}rgba(255, 193, 7, 0.15){% endif %}; padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem; border-left: 2px solid {% if flag.severity == 'High' %}#dc3545{% else %}#ffc107{% endif %};">
+                            <div style="font-size: 0.75rem; font-weight: bold; color: #2d3748; margin-bottom: 0.25rem;">
+                                <span class="badge" style="font-size: 0.65rem; padding: 0.15rem 0.4rem; {% if flag.severity == 'High' %}background: #dc3545; color: white{% else %}background: #ffc107; color: #212529{% endif %}; margin-right: 0.25rem;">
+                                    {{ flag.severity }}
+                                </span>
+                                {{ flag.flag_type }}
+                            </div>
+                            <div style="font-size: 0.75rem; color: #495057; line-height: 1.3;">
+                                {{ flag.description }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                    {% if candidate.total_flags > 2 %}
+                        <div style="text-align: center; margin-top: 0.5rem;">
+                            <a href="{{ url_for('candidate_detail', candidate_id=candidate.id, from='bulk_analysis') }}" style="color: #667eea; font-size: 0.8rem; text-decoration: none; font-weight: 600;">
+                                +{{ candidate.total_flags - 2 }} more →
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% else %}
+                <div style="text-align: center; padding: 0.5rem;">
+                    <span style="font-size: 1.5rem;">✓</span>
+                    <div style="font-weight: 600; color: #28a745; font-size: 0.9rem;">Clean Profile</div>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <a href="{{ url_for('candidate_detail', candidate_id=candidate.id, from='bulk_analysis') }}" class="btn btn-primary" style="text-align: center; padding: 0.75rem;">
+                📋 Full Details
+            </a>
+            <a href="{{ url_for('download_resume', candidate_id=candidate.id) }}" class="btn" style="text-align: center; padding: 0.75rem; background: #28a745; color: white; border: none; border-radius: 8px; text-decoration: none;">
+                📥 Download
+            </a>
+            <form method="POST" action="{{ url_for('delete_candidate', candidate_id=candidate.id) }}" onsubmit="return confirm('Delete {{ candidate.name }}?');">
+                <button type="submit" class="btn" style="width: 100%; padding: 0.75rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    🗑️ Delete
+                </button>
+            </form>
+        </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="card" style="text-align: center; padding: 3rem;">
+    <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;">📊</div>
+    <h3 style="color: #6c757d; margin-bottom: 1rem;">No Candidates Yet</h3>
+    <p style="color: #6c757d; margin-bottom: 2rem; line-height: 1.6;">
+        Upload resumes using <strong>Bulk Upload</strong> to see comprehensive AI-powered analysis here.
+    </p>
+    <a href="{{ url_for('bulk_upload') }}" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1.1rem;">
+        📁 Upload Resumes Now
+    </a>
+</div>
+{% endif %}
+
+<script>
+function toggleCandidate(candidateId) {
+    const details = document.getElementById(`details-${candidateId}`);
+    const icon = document.getElementById(`toggle-icon-${candidateId}`);
+    
+    if (details.style.display === 'none' || details.style.display === '') {
+        // Expand
+        details.style.display = 'block';
+        icon.textContent = '−';
+        icon.style.transform = 'rotate(180deg)';
+    } else {
+        // Collapse
+        details.style.display = 'none';
+        icon.textContent = '+';
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
+
+function expandAll() {
+    // Find all details divs
+    const allDetails = document.querySelectorAll('[id^="details-"]');
+    const allIcons = document.querySelectorAll('[id^="toggle-icon-"]');
+    
+    allDetails.forEach(details => {
+        details.style.display = 'block';
+    });
+    
+    allIcons.forEach(icon => {
+        icon.textContent = '−';
+        icon.style.transform = 'rotate(180deg)';
+    });
+}
+
+function collapseAll() {
+    // Find all details divs
+    const allDetails = document.querySelectorAll('[id^="details-"]');
+    const allIcons = document.querySelectorAll('[id^="toggle-icon-"]');
+    
+    allDetails.forEach(details => {
+        details.style.display = 'none';
+    });
+    
+    allIcons.forEach(icon => {
+        icon.textContent = '+';
+        icon.style.transform = 'rotate(0deg)';
+    });
+}
+
+function toggleSkills(viewType, candidateId) {
+    const container = document.getElementById(`skills-${viewType}-${candidateId}`);
+    const hiddenBadges = container.querySelectorAll('.skill-badge-hidden');
+    const moreBadge = container.querySelector('.more-badge');
+    
+    // Check if currently showing all skills
+    const isExpanded = hiddenBadges[0].style.display !== 'none';
+    
+    if (isExpanded) {
+        // Collapse - hide extra skills
+        hiddenBadges.forEach(badge => {
+            badge.style.display = 'none';
+        });
+        const totalSkills = container.querySelectorAll('.skill-badge-hidden').length;
+        moreBadge.innerHTML = `+${totalSkills} more`;
+        moreBadge.style.background = '#667eea';
+    } else {
+        // Expand - show all skills
+        hiddenBadges.forEach(badge => {
+            badge.style.display = 'inline-block';
+        });
+        moreBadge.innerHTML = '− Show less';
+        moreBadge.style.background = '#764ba2';
+    }
+}
+</script>
+
+{% endblock %}

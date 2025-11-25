@@ -139,7 +139,9 @@ END
 
 ---
 
-### Workflow 2: Resume Upload & Analysis
+### Workflow 2A: Job-Based Resume Upload & Analysis
+
+**Note**: See Workflow 2B below for bulk upload without job descriptions
 
 ```
 START
@@ -217,6 +219,79 @@ END
 - `INSERT INTO red_flags (candidate_id, flag_type, severity, description)`
 
 **Time Complexity**: ~2-3 seconds per resume
+
+---
+
+### Workflow 2B: Bulk Upload (Independent of Job Descriptions)
+
+```
+START
+  ↓
+User accesses "Bulk Upload" page
+  ↓
+User uploads one or more PDF/DOCX files (no JD required)
+  ↓
+User clicks "Upload Resumes"
+  ↓
+Flask receives files
+  ↓
+FOR EACH resume file:
+  │
+  ├→ Save file to uploads/ directory
+  │
+  ├→ Create candidate record (job_id = NULL)
+  │
+  ├→ Resume Parser Agent extracts data
+  │
+  ├→ Skills extracted (100+ skills recognized)
+  │
+  ├→ AI profiles candidate for best-fit role:
+  │   • Analyzes skill combinations
+  │   • Assigns role profile:
+  │     - Full Stack Developer
+  │     - DevOps Engineer
+  │     - Data Scientist
+  │     - Cloud Architect
+  │     - QA Engineer
+  │     - Database Administrator
+  │     - Mobile Developer
+  │     - AI/ML Engineer
+  │     - Frontend/Backend Developer
+  │
+  ├→ Red Flag Agent detects issues
+  │   • Validates resume text (prevents false positives)
+  │   • Merges overlapping employment periods
+  │   • Checks for career gaps (>1 year)
+  │   • Assigns severity levels
+  │
+  └→ Store in resume_data and red_flags tables
+  ↓
+Display on Bulk Analysis page with:
+  • Expandable skills badges ("+X more" clickable)
+  • Detailed red flag breakdowns
+  • AI-generated role profiles
+  • Desktop + mobile optimized views
+  ↓
+Also display on Dashboard:
+  • Top 6 recent bulk candidates
+  • Profile cards with color-coded borders
+  • Quick stats (skills count, red flags, experience)
+  ↓
+END
+```
+
+**Database Operations**:
+- `INSERT INTO candidates (name, email, phone, resume_path, job_id = NULL)`
+- `INSERT INTO resume_data (candidate_id, skills, experience_years, education, profile, raw_text)`
+- `INSERT INTO red_flags (candidate_id, flag_type, severity, description, recommendation)`
+
+**Key Differences from Job-Based**:
+- No job_id or match_score (independent analysis)
+- AI generates role profile automatically
+- No analysis_results table entry
+- Accessible from dashboard and dedicated page
+
+**Time Complexity**: ~1-2 seconds per resume (faster without JD matching)
 
 ---
 

@@ -47,6 +47,10 @@ class RedFlagDetector:
     
     def _check_career_gaps(self, resume_text):
         """Detect unexplained gaps in employment"""
+        # Skip if resume text is empty or too short
+        if not resume_text or len(resume_text.strip()) < 50:
+            return
+        
         # Split resume into sections
         lines = resume_text.split('\n')
         
@@ -81,17 +85,23 @@ class RedFlagDetector:
         if len(employment_periods) < 2:
             return  # Need at least 2 jobs to check for gaps
         
-        if len(employment_periods) < 2:
-            return
-        
         # Sort by start year
         employment_periods.sort()
         
-        # Check for gaps between consecutive employment periods
+        # Merge overlapping periods to handle concurrent jobs or education-work overlap
+        merged_periods = []
+        for start, end in employment_periods:
+            if merged_periods and start <= merged_periods[-1][1] + 1:
+                # Overlapping or adjacent (within 1 year) - merge
+                merged_periods[-1] = (merged_periods[-1][0], max(merged_periods[-1][1], end))
+            else:
+                merged_periods.append((start, end))
+        
+        # Check for gaps between merged employment periods
         gaps = []
-        for i in range(len(employment_periods) - 1):
-            current_end = employment_periods[i][1]
-            next_start = employment_periods[i + 1][0]
+        for i in range(len(merged_periods) - 1):
+            current_end = merged_periods[i][1]
+            next_start = merged_periods[i + 1][0]
             gap = next_start - current_end
             
             # A gap of 1 year or less is acceptable (could be months, job searching, etc.)

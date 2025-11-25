@@ -27,6 +27,52 @@ print("✅ RAG Agent Initialized")
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
 
+def _generate_candidate_profile(skills, experience_years):
+    """Generate a profile summary indicating what roles the candidate would be good for"""
+    skills = [s.strip() for s in skills if s.strip()]
+    
+    # Define role categories based on skills
+    role_profiles = {
+        "Full Stack Developer": ["React", "Angular", "Vue", "Node.js", "JavaScript", "TypeScript", "Python", "Java", "Django", "Flask", "Express", "MongoDB", "PostgreSQL", "MySQL"],
+        "Frontend Developer": ["React", "Angular", "Vue", "JavaScript", "TypeScript", "HTML", "CSS", "Bootstrap", "Tailwind", "jQuery", "Webpack"],
+        "Backend Developer": ["Python", "Java", "Node.js", "C#", ".NET", "PHP", "Ruby", "Go", "Django", "Flask", "Spring", "Express", "API", "REST"],
+        "DevOps Engineer": ["Docker", "Kubernetes", "Jenkins", "CI/CD", "AWS", "Azure", "GCP", "Terraform", "Ansible", "Linux", "Git"],
+        "Data Scientist": ["Python", "Machine Learning", "Deep Learning", "TensorFlow", "PyTorch", "Pandas", "NumPy", "Data Science", "R", "Scikit-learn"],
+        "Cloud Engineer": ["AWS", "Azure", "GCP", "Docker", "Kubernetes", "Terraform", "CloudFormation", "Lambda", "EC2", "S3"],
+        "Mobile Developer": ["Swift", "Kotlin", "React", "iOS", "Android", "Flutter", "React Native"],
+        "QA Engineer": ["Selenium", "Testing", "QA", "Automated Testing", "Pytest", "JUnit", "TestNG", "Cypress", "JIRA"],
+        "Database Administrator": ["SQL", "MySQL", "PostgreSQL", "Oracle", "MongoDB", "Redis", "Database", "DynamoDB"],
+        "AI/ML Engineer": ["Machine Learning", "Deep Learning", "AI", "TensorFlow", "PyTorch", "NLP", "LLM", "GPT", "BERT", "Transformer"]
+    }
+    
+    # Calculate match scores for each role
+    role_matches = {}
+    for role, required_skills in role_profiles.items():
+        matches = sum(1 for skill in skills if any(req.lower() in skill.lower() for req in required_skills))
+        if matches > 0:
+            role_matches[role] = matches
+    
+    # Sort by match count
+    sorted_roles = sorted(role_matches.items(), key=lambda x: x[1], reverse=True)
+    
+    # Generate profile
+    if sorted_roles:
+        top_role = sorted_roles[0][0]
+        exp_level = "Senior" if experience_years >= 5 else "Mid-level" if experience_years >= 2 else "Junior"
+        
+        # Get top 3 roles
+        top_roles = [role for role, _ in sorted_roles[:3]]
+        
+        if len(top_roles) > 1:
+            profile = f"{exp_level} {top_role} (also suitable for {', '.join(top_roles[1:])})"
+        else:
+            profile = f"{exp_level} {top_role}"
+        
+        return profile
+    else:
+        exp_level = "Senior" if experience_years >= 5 else "Mid-level" if experience_years >= 2 else "Entry-level"
+        return f"{exp_level} Professional with {experience_years} years experience"
+
 @app.route('/')
 def index():
     """Home page / Dashboard"""
@@ -58,8 +104,38 @@ def index():
     if recent_analyses is None:
         recent_analyses = []
     
+    # Get bulk upload candidate briefs (top 6 most recent)
+    bulk_candidates = fetch_query(conn, """
+        SELECT 
+            c.id,
+            c.name,
+            c.email,
+            c.created_at,
+            rd.experience_years,
+            rd.skills,
+            (SELECT COUNT(*) FROM red_flags rf WHERE rf.candidate_id = c.id) as total_flags,
+            (SELECT COUNT(*) FROM red_flags rf WHERE rf.candidate_id = c.id AND rf.severity = 'High') as high_flags
+        FROM candidates c
+        INNER JOIN resume_data rd ON c.id = rd.candidate_id
+        LEFT JOIN analysis_results ar ON c.id = ar.candidate_id
+        WHERE ar.id IS NULL
+        ORDER BY c.created_at DESC
+        LIMIT 6
+    """)
+    
+    # Generate profiles for bulk candidates
+    if bulk_candidates:
+        for candidate in bulk_candidates:
+            candidate['profile'] = _generate_candidate_profile(
+                candidate.get('skills', ''),
+                candidate.get('experience_years', 0)
+            )
+            # Get skill count
+            skills = candidate.get('skills', '')
+            candidate['skills_count'] = len([s.strip() for s in skills.split(',') if s.strip()]) if skills else 0
+    
     conn.close()
-    return render_template('index.html', stats=stats, recent_analyses=recent_analyses)
+    return render_template('index.html', stats=stats, recent_analyses=recent_analyses, bulk_candidates=bulk_candidates or [])
 
 @app.route('/create_job', methods=['GET', 'POST'])
 def create_job():
@@ -87,6 +163,117 @@ def create_job():
         return redirect(url_for('upload'))
     
     return render_template('create_job.html')
+
+@app.route('/bulk_upload', methods=['GET', 'POST'])
+def bulk_upload():
+    """Bulk upload resumes independent of job descriptions - Parse, analyze skills, detect red flags"""
+    conn = create_connection()
+    if not conn:
+        flash('Database connection error', 'error')
+        return render_template('bulk_upload.html')
+    
+    if request.method == 'POST':
+        # Process uploaded resumes from folder
+        files = request.files.getlist('resumes')
+        processed_count = 0
+        failed_count = 0
+        
+        # Create a generic job description for skill analysis and candidate profiling
+        generic_jd = """
+        Looking for talented professionals with strong technical skills, relevant experience,
+        and a solid educational background. Key areas: software development, data analysis,
+        project management, communication skills, problem-solving abilities, teamwork,
+        cloud technologies, databases, programming languages, and industry-relevant certifications.
+        """
+        
+        for file in files:
+            if file and allowed_file(file.filename):
+                try:
+                    filename = secure_filename(file.filename)
+                    filepath = os.path.join(Config.UPLOAD_FOLDER, filename)
+                    file.save(filepath)
+                    
+                    print(f"\n📄 Processing: {filename}")
+                    
+                    # ===== USE EXISTING MULTI-AGENT SYSTEM =====
+                    # Execute orchestrator with generic profile for skill analysis
+                    agent_result = orchestrator.execute({
+                        "file_path": filepath,
+                        "job_description": generic_jd,
+                        "required_experience": 0
+                    })
+                    
+                    if agent_result.get("success"):
+                        candidate_data = agent_result['candidate_data']
+                        scores = agent_result['scores']
+                        
+                        print(f"   Name: {candidate_data['name']}")
+                        print(f"   Email: {candidate_data.get('email', 'N/A')}")
+                        print(f"   Phone: {candidate_data.get('phone', 'N/A')}")
+                        print(f"   Skills: {candidate_data.get('skills', 'N/A')[:100]}...")
+                        print(f"   Experience: {candidate_data['experience_years']} years")
+                        print(f"   Skill Assessment Score: {scores['skill_match_score']}%")
+                        
+                        # Save candidate
+                        candidate_id = execute_query(conn,
+                            "INSERT INTO candidates (name, email, phone, resume_path) VALUES (%s, %s, %s, %s)",
+                            (candidate_data['name'], candidate_data.get('email'), 
+                             candidate_data.get('phone'), filepath)
+                        )
+                        
+                        # Save resume data with comprehensive analysis
+                        execute_query(conn,
+                            """INSERT INTO resume_data (candidate_id, skills, experience_years, education, 
+                               projects, certifications, job_titles, raw_text) 
+                               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+                            (candidate_id, 
+                             candidate_data['skills'],
+                             candidate_data['experience_years'],
+                             candidate_data['education'], 
+                             '',  # projects
+                             '',  # certifications
+                             '',  # job_titles
+                             '')  # raw_text
+                        )
+                        
+                        # Filter red flags - only save job-independent flags for bulk upload
+                        # Exclude: "Irrelevant Experience", "Missing Skills", "Minimal Experience"
+                        job_independent_flag_types = ['Job Hopping', 'Career Gap', 'Frequent Job Changes', 
+                                                      'Employment Gap', 'Short Tenure']
+                        
+                        for flag in agent_result.get('red_flags', []):
+                            # Only save flags that don't require job description context
+                            if any(flag_type.lower() in flag['type'].lower() for flag_type in job_independent_flag_types):
+                                execute_query(conn,
+                                    "INSERT INTO red_flags (candidate_id, flag_type, description, severity) VALUES (%s, %s, %s, %s)",
+                                    (candidate_id, flag['type'], flag['description'], flag['severity'])
+                                )
+                        
+                        # Generate candidate profile summary based on skills
+                        skills_list = candidate_data['skills'].split(',') if isinstance(candidate_data['skills'], str) else candidate_data['skills']
+                        profile_summary = _generate_candidate_profile(skills_list, candidate_data['experience_years'])
+                        
+                        print(f"   Profile: {profile_summary}")
+                        print(f"✅ Successfully processed: {candidate_data['name']}")
+                        
+                        processed_count += 1
+                    else:
+                        failed_count += 1
+                        error_msg = agent_result.get('error', 'Unknown error')
+                        print(f"❌ Agent processing failed: {filename} - {error_msg}")
+                        
+                except Exception as e:
+                    failed_count += 1
+                    print(f"❌ Error processing {filename}: {str(e)}")
+                    import traceback
+                    traceback.print_exc()
+        
+        conn.close()
+        flash(f'Successfully processed {processed_count} resumes. Failed: {failed_count}', 'success' if failed_count == 0 else 'error')
+        return redirect(url_for('candidates'))
+    
+    conn.close()
+    return render_template('bulk_upload.html')
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
@@ -194,6 +381,57 @@ def upload():
     
     conn.close()
     return render_template('upload.html', jobs=jobs)
+
+@app.route('/bulk_analysis')
+def bulk_analysis():
+    """View comprehensive analysis of all bulk uploaded candidates"""
+    conn = create_connection()
+    if not conn:
+        flash('Database connection error', 'error')
+        return render_template('bulk_analysis.html', candidates=[])
+    
+    # Get all candidates with their resume data and red flags
+    query = """
+        SELECT 
+            c.id, c.name, c.email, c.phone, c.created_at,
+            rd.skills, rd.experience_years, rd.education, 
+            rd.certifications, rd.job_titles,
+            (SELECT COUNT(*) FROM red_flags rf WHERE rf.candidate_id = c.id) as total_flags,
+            (SELECT COUNT(*) FROM red_flags rf WHERE rf.candidate_id = c.id AND rf.severity = 'High') as high_flags,
+            (SELECT COUNT(*) FROM red_flags rf WHERE rf.candidate_id = c.id AND rf.severity = 'Medium') as medium_flags
+        FROM candidates c
+        LEFT JOIN resume_data rd ON c.id = rd.candidate_id
+        ORDER BY c.created_at DESC
+    """
+    candidates_list = fetch_query(conn, query)
+    
+    # Enhance each candidate with profile analysis and detailed red flags
+    for candidate in candidates_list:
+        # Fetch detailed red flags for each candidate
+        red_flags_query = """
+            SELECT flag_type, description, severity 
+            FROM red_flags 
+            WHERE candidate_id = %s 
+            ORDER BY 
+                CASE severity 
+                    WHEN 'High' THEN 1 
+                    WHEN 'Medium' THEN 2 
+                    ELSE 3 
+                END
+        """
+        candidate['red_flags_list'] = fetch_query(conn, red_flags_query, (candidate['id'],))
+        if candidate.get('skills'):
+            skills_list = [s.strip() for s in candidate['skills'].split(',') if s.strip()]
+            candidate['skills_list'] = skills_list
+            candidate['profile'] = _generate_candidate_profile(skills_list, candidate.get('experience_years', 0))
+            candidate['skills_count'] = len(skills_list)
+        else:
+            candidate['skills_list'] = []
+            candidate['profile'] = 'Profile not available'
+            candidate['skills_count'] = 0
+    
+    conn.close()
+    return render_template('bulk_analysis.html', candidates=candidates_list)
 
 @app.route('/candidates')
 def candidates():
@@ -500,7 +738,7 @@ def rag_chat():
     conn = create_connection()
     if not conn:
         flash('Database connection error', 'error')
-        return render_template('rag_chat.html', jobs=[])
+        return render_template('rag_chat.html', jobs=[], total_candidates=0)
     
     # Get all job descriptions with candidate counts
     jobs = fetch_query(conn, """
@@ -515,8 +753,16 @@ def rag_chat():
         ORDER BY jd.created_at DESC
     """)
     
+    # Get total candidate count (all candidates with resume data)
+    total_result = fetch_query(conn, """
+        SELECT COUNT(DISTINCT c.id) as total
+        FROM candidates c
+        INNER JOIN resume_data rd ON c.id = rd.candidate_id
+    """)
+    total_candidates = total_result[0]['total'] if total_result else 0
+    
     conn.close()
-    return render_template('rag_chat.html', jobs=jobs)
+    return render_template('rag_chat.html', jobs=jobs, total_candidates=total_candidates)
 
 @app.route('/api/rag/query', methods=['POST'])
 def rag_query():
@@ -554,6 +800,7 @@ def rag_query():
             """
             candidates = fetch_query(conn, candidates_query, (job_id,))
         else:
+
             candidates_query = """
                 SELECT 
                     c.id,

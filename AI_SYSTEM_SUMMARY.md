@@ -27,9 +27,12 @@ The application uses **5 specialized AI agents** that work together to analyze r
   - **python-Levenshtein** (v0.21.1) - Fast similarity calculations
   - **Regex patterns** - Skill extraction from text
 - **Features**:
-  - 160+ predefined skills database
+  - 100+ predefined skills database including:
+    * 20+ databases (PostgreSQL, MySQL, MongoDB, Oracle, MariaDB, Neo4j, InfluxDB, etc.)
+    * 40+ BI tools (Power BI, Tableau, QlikView, MicroStrategy, SSRS, SSIS, Alteryx, Talend, dbt, Airflow, etc.)
+    * SQL languages (T-SQL, PL/SQL, Stored Procedures, Triggers, Views)
   - Fuzzy matching (80%+ similarity threshold)
-  - Skill synonym detection (e.g., "JS" → "JavaScript")
+  - Skill synonym detection (e.g., "t-sql" → "tsql", "pl/sql" → "plsql")
   - Experience level assessment
 
 #### **C. SemanticMatchingAgent** ⭐ **AI-Powered**
@@ -97,6 +100,18 @@ The RAG chatbot enables **natural language querying** of candidate database usin
   6. **Recommendation** - "Who should I hire for DevOps?"
   7. **Listing** - "List all SQL developers"
   8. **Search** - "Find cloud experts"
+
+- **Role-Based Intelligence**: Maps generic job terms to relevant technical skills:
+  * **DevOps** → Docker, Kubernetes, Jenkins, CI/CD, Terraform, Ansible, AWS
+  * **Database** → SQL, MySQL, PostgreSQL, MongoDB, Oracle, Database Admin
+  * **Testing/QA** → Testing, QA, Selenium, Automated Testing, Manual Testing
+  * **Data Science** → Python, R, SQL, Machine Learning, Pandas, NumPy, Tableau
+  * **ML/AI** → Machine Learning, Python, TensorFlow, PyTorch, Scikit-learn
+  * **Fullstack** → React, Node.js, JavaScript, Python, SQL, MongoDB, REST API
+  * **BI** → Power BI, Tableau, SQL, Excel, Data Analysis, ETL
+  * **Frontend** → React, Angular, Vue.js, HTML, CSS, JavaScript
+  * **Backend** → Node.js, Python, Java, .NET, Go, REST API, GraphQL
+  * **Cloud** → AWS, Azure, GCP, Cloud Architecture, Serverless
 
 #### **Semantic Search Process**:
 1. **Question Encoding**: User query → 384-dim vector
@@ -296,16 +311,37 @@ red_flags
 
 ### **HR Dashboard**
 - Upload multiple resumes (drag & drop)
+- **Two upload modes**: Job-based analysis OR bulk upload without job descriptions
+- **Candidate Analysis Briefs** on homepage:
+  * Profile cards with AI-generated role recommendations
+  * Color-coded borders (red for high flags, green for senior, blue default)
+  * Skills count and experience display
+  * Direct access to full profiles
 - View ranked candidates by job
 - Filter by tier (Top/Medium/Low)
-- Download shortlists (CSV/PDF)
+- Download shortlists and individual resumes
 - View AI explanations for scores
 
+### **Bulk Analysis Page**
+- **Collapsible accordion view** 🆕: Click any row to expand/collapse full details
+  - Compact summary: Name, experience, skills, profile, red flags in one line
+  - Full card on expand: Complete profile with all details
+  - **Expand All / Collapse All buttons** for bulk operations
+- **Comprehensive candidate profiles** (desktop + mobile optimized)
+- **Expandable skills badges**: Click "+X more" to show/hide all skills
+- **Detailed red flag breakdowns** with severity indicators and recommendations
+- **Quick statistics**: Total candidates, senior level count, flagged profiles, avg skills
+- **Actions**: Download resumes, view full profiles, delete candidates
+- **Color-coded cards**: Visual indicators for experience level and red flags
+
 ### **RAG Chatbot Interface**
-- Natural language input
+- Natural language input with role-based understanding
 - Markdown-formatted responses
-- Real-time search results
+- Real-time search results with AI semantic matching
 - Match percentage (2 decimal places)
+- **Resume count display**: Shows total indexed and per-job counts
+- **View Profile + Download buttons** 🆕: Access full candidate details from chat
+- **Smart back navigation**: Returns to AI Chat when viewing from chatbot
 - Chat history (localStorage, 50 messages)
 - Clear history button
 - Mobile responsive
@@ -410,13 +446,18 @@ red_flags
 
 ✅ **5 Specialized AI Agents** for resume analysis  
 ✅ **SentenceTransformer AI Model** (all-MiniLM-L6-v2, 384-dim embeddings)  
-✅ **RAG Chatbot** with natural language understanding  
+✅ **RAG Chatbot** with role-based intelligence (10+ job categories)  
 ✅ **Semantic Search** using cosine similarity  
 ✅ **Hybrid Scoring** (AI + fuzzy matching + keywords)  
+✅ **Dual Upload Modes** (job-based + bulk upload with role profiling)  
+✅ **Expandable Skills UI** (click to show/hide all skills)  
+✅ **Dashboard Enhancements** (candidate profile cards with stats)  
+✅ **Smart Career Gap Detection** (validates resume text, merges overlapping periods)  
+✅ **100+ Technical Skills** (databases, BI tools, SQL languages, frameworks)  
 ✅ **Local Execution** (privacy-first, no API costs)  
 ✅ **Real-time Chat Interface** with markdown formatting  
 ✅ **Multi-tier Ranking** (Top/Medium/Low)  
-✅ **Red Flag Detection** for quality control  
+✅ **Red Flag Detection** with severity levels and recommendations  
 
 **Tech Stack**: Python + Flask + MySQL + SentenceTransformers + spaCy + FuzzyWuzzy  
 **AI Model**: Hugging Face all-MiniLM-L6-v2 (80MB, local, free)  

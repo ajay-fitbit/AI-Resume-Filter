@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Upload Resumes - AI Resume Filter{% endblock %}
+
+{% block content %}
+<h2 style="color: white; margin-bottom: 2rem;">📁 Bulk Upload Resumes</h2>
+
+<div class="card">
+    <form method="POST" enctype="multipart/form-data">
+        <h3 style="margin-bottom: 1.5rem;">Upload Resumes from Folder</h3>
+        <p style="color: #6c757d; margin-bottom: 2rem;">
+            Upload multiple resumes at once. Our AI will parse each resume, assess skills, detect red flags, 
+            and analyze what roles the candidate would be suitable for - all <strong>without requiring a job description</strong>. 
+            You can match them to specific jobs later.
+        </p>
+        
+        <div class="form-group">
+            <label for="resumes">Select Resume Files (PDF or DOCX) *</label>
+            <input type="file" id="resumes" name="resumes" multiple accept=".pdf,.doc,.docx" required 
+                   style="padding: 1rem; border: 2px dashed #667eea; background: #f8f9fa;">
+            <small style="color: #6c757d; display: block; margin-top: 0.75rem;">
+                💡 <strong>Tip:</strong> Select all resume files from your folder at once. Maximum size per file: 16MB
+            </small>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2.5rem;">
+            <button type="submit" class="btn btn-primary">
+                ⚡ Process All Resumes
+            </button>
+            <a href="{{ url_for('candidates') }}" class="btn btn-secondary">
+                View Candidates
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border: none;">
+    <h4 style="color: #667eea; margin-bottom: 1.5rem;">✨ AI-Powered Analysis</h4>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem;">
+        <div>
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🤖</div>
+            <h5 style="color: #2d3748; margin-bottom: 0.5rem;">Resume Parser Agent</h5>
+            <p style="color: #4a5568; font-size: 0.9rem; line-height: 1.6;">
+                Extracts name, email, phone, skills, experience, education, certifications
+            </p>
+        </div>
+        <div>
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎯</div>
+            <h5 style="color: #2d3748; margin-bottom: 0.5rem;">Skills Assessment Agent</h5>
+            <p style="color: #4a5568; font-size: 0.9rem; line-height: 1.6;">
+                Identifies technical and soft skills, calculates skill proficiency score
+            </p>
+        </div>
+        <div>
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🚩</div>
+            <h5 style="color: #2d3748; margin-bottom: 0.5rem;">Red Flag Agent</h5>
+            <p style="color: #4a5568; font-size: 0.9rem; line-height: 1.6;">
+                Detects job hopping, career gaps, and frequent job changes (job-independent analysis only)
+            </p>
+        </div>
+        <div>
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">💼</div>
+            <h5 style="color: #2d3748; margin-bottom: 0.5rem;">Profile Analyzer</h5>
+            <p style="color: #4a5568; font-size: 0.9rem; line-height: 1.6;">
+                Determines suitable roles: Full Stack, DevOps, Data Scientist, etc.
+            </p>
+        </div>
+        <div>
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🧠</div>
+            <h5 style="color: #2d3748; margin-bottom: 0.5rem;">Semantic Analysis</h5>
+            <p style="color: #4a5568; font-size: 0.9rem; line-height: 1.6;">
+                AI-powered understanding of resume content using transformers
+            </p>
+        </div>
+        <div>
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">💾</div>
+            <h5 style="color: #2d3748; margin-bottom: 0.5rem;">Database Storage</h5>
+            <p style="color: #4a5568; font-size: 0.9rem; line-height: 1.6;">
+                Stores all analyzed data for instant job matching later
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="background: #fff3cd; border-left: 4px solid #ffc107;">
+    <h4 style="color: #856404; margin-bottom: 1rem;">ℹ️ Important Notes</h4>
+    <ul style="color: #856404; line-height: 1.8; margin-left: 1.5rem;">
+        <li><strong>Full AI Analysis:</strong> Uses all 5 specialized agents (Parser, Skills, Semantic, Red Flag, Orchestrator)</li>
+        <li><strong>Role Profiling:</strong> Automatically determines suitable roles based on skills and experience</li>
+        <li><strong>Smart Red Flag Detection:</strong> Only checks job-independent flags (job hopping, career gaps) - no irrelevant "missing skills" alerts</li>
+        <li><strong>No Job Matching:</strong> Analyzes candidates independently - no specific job comparison needed</li>
+        <li><strong>Fast Bulk Import:</strong> Process entire folders of resumes with comprehensive AI analysis</li>
+        <li><strong>Match Later:</strong> Use "Upload Resumes" to compare candidates against specific job postings</li>
+        <li><strong>View Results:</strong> After upload, go to "Candidate Analysis" to see detailed profiles and red flags</li>
+    </ul>
+</div>
+
+<div class="card" style="background: #d4edda; border-left: 4px solid #28a745;">
+    <h4 style="color: #155724; margin-bottom: 1rem;">🔄 Workflow Comparison</h4>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1rem;">
+        <div>
+            <h5 style="color: #155724; margin-bottom: 0.75rem;">📁 Bulk Upload (This Page)</h5>
+            <p style="color: #155724; font-size: 0.9rem; line-height: 1.6;">
+                ✓ Upload many resumes at once<br>
+                ✓ Full multi-agent AI analysis<br>
+                ✓ Parse all candidate information<br>
+                ✓ Skills assessment & profiling<br>
+                ✓ Red flag detection<br>
+                ✓ Role suitability analysis<br>
+                ✗ No job-specific matching
+            </p>
+        </div>
+        <div>
+            <h5 style="color: #155724; margin-bottom: 0.75rem;">📤 Job-Based Upload</h5>
+            <p style="color: #155724; font-size: 0.9rem; line-height: 1.6;">
+                ✓ Upload for specific job posting<br>
+                ✓ Full AI analysis & matching<br>
+                ✓ Calculate match scores (0-100%)<br>
+                ✓ Rank into tiers (Top/Medium/Low)<br>
+                ✓ Job-specific skill matching<br>
+                ✓ Detailed AI explanations<br>
+                ✓ Comparative ranking
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -8,9 +8,39 @@
 {% if job %}
 <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
     <h3 style="margin-bottom: 1rem;">{{ job.title }}</h3>
-    <p style="opacity: 0.9;">{{ job.description[:200] }}...</p>
-    <small style="opacity: 0.8;">Posted: {{ job.created_at.strftime('%Y-%m-%d') }}</small>
+    <div id="jd-preview" style="opacity: 0.9; line-height: 1.6;">
+        {{ job.description[:200] }}...
+    </div>
+    <div id="jd-full" style="display: none; opacity: 0.9; line-height: 1.6; white-space: pre-wrap;">
+        {{ job.description }}
+    </div>
+    <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+        <small style="opacity: 0.8;">Posted: {{ job.created_at.strftime('%Y-%m-%d') }}</small>
+        <button onclick="toggleJD()" id="jd-toggle-btn" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+            📄 Show Full Description
+        </button>
+    </div>
 </div>
+
+<script>
+function toggleJD() {
+    const preview = document.getElementById('jd-preview');
+    const full = document.getElementById('jd-full');
+    const btn = document.getElementById('jd-toggle-btn');
+    
+    if (full.style.display === 'none') {
+        // Show full
+        preview.style.display = 'none';
+        full.style.display = 'block';
+        btn.textContent = '📄 Show Less';
+    } else {
+        // Show preview
+        preview.style.display = 'block';
+        full.style.display = 'none';
+        btn.textContent = '📄 Show Full Description';
+    }
+}
+</script>
 {% endif %}
 
 <div class="card">
@@ -80,14 +110,14 @@
                     {% endif %}
                 </td>
                 <td style="white-space: nowrap;">
-                    <a href="{{ url_for('candidate_detail', candidate_id=candidate.id) }}" class="btn btn-primary" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; margin-right: 0.5rem;">
+                    <a href="{{ url_for('candidate_detail', candidate_id=candidate.id) }}" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem; margin-right: 0.5rem; min-width: 90px; text-align: center;">
                         View
                     </a>
-                    <a href="{{ url_for('download_resume', candidate_id=candidate.id) }}" class="btn" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; background: #28a745; color: white; border: none; border-radius: 4px; text-decoration: none; margin-right: 0.5rem;">
+                    <a href="{{ url_for('download_resume', candidate_id=candidate.id) }}" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #28a745; color: white; border: none; border-radius: 8px; text-decoration: none; margin-right: 0.5rem; min-width: 120px; text-align: center;">
                         📥 Download
                     </a>
                     <form method="POST" action="{{ url_for('delete_candidate', candidate_id=candidate.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete {{ candidate.name }}? This will remove all their data including resume and analysis results.');">
-                        <button type="submit" class="btn" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        <button type="submit" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; min-width: 90px; display: inline-block; line-height: 1.5; vertical-align: middle;">
                             Delete
                         </button>
                     </form>

@@ -113,6 +113,11 @@ class SkillsAssessmentAgent(BaseAgent):
             # Databases
             'sql', 'mysql', 'postgresql', 'mongodb', 'redis', 'oracle', 'sql server',
             'cassandra', 'dynamodb', 'elasticsearch', 'snowflake', 'redshift', 'bigquery',
+            'mariadb', 'db2', 'sqlite', 'couchdb', 'neo4j', 'influxdb', 'timescaledb',
+            'hbase', 'amazon rds', 'azure sql', 'cosmos db', 'firebase', 'supabase',
+            'planetscale', 'cockroachdb', 'clickhouse', 'vertica', 'greenplum',
+            't-sql', 'tsql', 'pl/sql', 'plsql', 'pl-sql', 'mysql workbench', 'pgadmin',
+            'sql developer', 'stored procedures', 'triggers', 'views', 'indexes',
             
             # Cloud & DevOps
             'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'terraform', 'ansible', 'jenkins',
@@ -145,7 +150,13 @@ class SkillsAssessmentAgent(BaseAgent):
             
             # Data & Analytics
             'etl', 'data warehouse', 'data pipeline', 'big data', 'hadoop', 'spark', 'kafka',
-            'tableau', 'power bi', 'looker', 'excel',
+            'tableau', 'power bi', 'looker', 'excel', 'qlik', 'qlikview', 'qlik sense',
+            'microstrategy', 'sap businessobjects', 'cognos', 'ssrs', 'ssis', 'ssas',
+            'dax', 'power query', 'data modeling', 'data visualization', 'alteryx',
+            'talend', 'informatica', 'pentaho', 'dbt', 'airflow', 'dagster', 'prefect',
+            'azure data factory', 'aws glue', 'fivetran', 'stitch', 'metabase', 'superset',
+            'redash', 'google data studio', 'mode analytics', 'sisense', 'domo',
+            'dataiku', 'databricks', 'synapse analytics', 'azure synapse',
             
             # Operating Systems
             'linux', 'unix', 'windows', 'windows server', 'macos', 'bash', 'shell', 'powershell',
@@ -182,7 +193,7 @@ class SkillsAssessmentAgent(BaseAgent):
             'javascript': ['js', 'node.js', 'nodejs'],
             'typescript': ['ts'],
             'python': ['py'],
-            'postgresql': ['postgres'],
+            'postgresql': ['postgres', 'psql'],
             'mongodb': ['mongo'],
             'kubernetes': ['k8s'],
             'aws': ['amazon web services'],
@@ -192,7 +203,21 @@ class SkillsAssessmentAgent(BaseAgent):
             'llm': ['large language model', 'large language models'],
             'rag': ['retrieval augmented generation', 'retrieval-augmented generation'],
             'nlp': ['natural language processing'],
-            'ml': ['machine learning']
+            'ml': ['machine learning'],
+            'power bi': ['powerbi', 'pbi'],
+            'sql server': ['mssql', 'microsoft sql server'],
+            'ssrs': ['sql server reporting services'],
+            'ssis': ['sql server integration services'],
+            'ssas': ['sql server analysis services'],
+            'etl': ['extract transform load'],
+            'bi': ['business intelligence'],
+            'data warehouse': ['data warehousing', 'dwh'],
+            'cosmos db': ['cosmosdb'],
+            'dynamodb': ['dynamo db'],
+            'bigquery': ['big query'],
+            't-sql': ['tsql', 'transact-sql', 'transact sql'],
+            'pl/sql': ['plsql', 'pl-sql'],
+            'stored procedures': ['stored procedure', 'sproc', 'sprocs']
         }
         
         for canonical, variants in variations.items():

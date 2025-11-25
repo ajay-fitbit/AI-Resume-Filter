@@ -72,9 +72,15 @@ net start MySQL
 - ✅ **DATABASE ENGINE: Converted MyISAM → InnoDB for foreign key support**
 - ✅ CASCADE DELETE constraints for data integrity (removes related records)
 - ✅ Enhanced experience calculation (supports "20 years of IT experience")
-- ✅ Fixed career gap detection to only check employment periods
+- ✅ **Fixed career gap detection**: Resume text validation, merged overlapping periods
 - ✅ Separated job creation from resume upload workflow
 - ✅ All scores display 2 decimal places
+- ✅ **Expanded skills database**: 100+ skills including databases, BI tools, SQL languages
+- ✅ **RAG agent enhancements**: Role-based skill mapping for 10+ job categories
+- ✅ **Bulk upload mode**: AI role profiling without job descriptions
+- ✅ **Dashboard enhancements**: Candidate profile cards with stats and quick access
+- ✅ **Expandable skills UI**: Clickable "+X more" badges in bulk analysis
+- ✅ **Chatbot improvements**: Resume count display, enhanced query understanding
 
 ## First Use
 
@@ -88,14 +94,20 @@ net start MySQL
 
 ## Key Features to Try
 
-- **Dashboard**: View statistics and recent analyses
+- **Dashboard**: View statistics, recent analyses, and bulk candidate profile cards
 - **Create Job**: Add new job descriptions
 - **Upload Resumes**: Process resumes for a specific job
+- **Bulk Upload** 🆕: Upload resumes without job descriptions
+  - AI automatically profiles candidates for best-fit roles
+  - **Collapsible accordion view**: Expand/collapse candidate details
+  - **Expand All / Collapse All buttons**: Bulk control for all candidates
+  - Expandable skills badges (click "+X more")
+  - View on dedicated Bulk Analysis page or dashboard cards
 - **AI Chatbot (RAG)** 🆕: Ask natural language questions like:
-  - "Who is best for DevOps engineering?"
-  - "Find candidates with database skills"
-  - "Show me cloud experts"
-  - Features: AI semantic search, chat history, markdown formatting
+  - "Who is good fit for database roles?"
+  - "Find DevOps candidates"
+  - "Show me data scientists with 5+ years"
+  - Features: Role-based intelligence, AI semantic search, View Profile button with smart back navigation, chat history, markdown formatting, resume count display
 - **All Candidates**: See all uploaded resumes across jobs
 - **All Jobs**: Manage job postings and view statistics
 - **Agent Monitoring**: View multi-agent system execution logs

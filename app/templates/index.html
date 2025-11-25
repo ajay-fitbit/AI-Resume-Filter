@@ -32,8 +32,63 @@
     </div>
 </div>
 
+{% if bulk_candidates %}
+<div class="card" style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 style="margin: 0;">📋 Recent Candidate Profiles</h3>
+        <a href="{{ url_for('bulk_analysis') }}" style="color: #667eea; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+            View All →
+        </a>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+        {% for candidate in bulk_candidates %}
+        <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); border: 1px solid rgba(102, 126, 234, 0.2); border-radius: 12px; padding: 1.25rem; border-left: 4px solid {% if candidate.high_flags > 0 %}#dc3545{% elif candidate.experience_years >= 5 %}#28a745{% else %}#667eea{% endif %};">
+            <div style="display: flex; align-items: start; gap: 1rem; margin-bottom: 1rem;">
+                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.3rem; font-weight: bold; flex-shrink: 0;">
+                    {{ candidate.name[0].upper() }}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <h4 style="margin: 0 0 0.25rem 0; color: #2d3748; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        {{ candidate.name }}
+                    </h4>
+                    <div style="font-size: 0.85rem; color: #6c757d; margin-bottom: 0.5rem;">
+                        {{ candidate.experience_years }} years experience
+                    </div>
+                    <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; color: #667eea;">
+                        💼 {{ candidate.profile }}
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-top: 1rem; border-top: 1px solid rgba(102, 126, 234, 0.1);">
+                <div>
+                    <div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 0.25rem;">Skills</div>
+                    <div style="font-size: 1.1rem; font-weight: bold; color: #667eea;">{{ candidate.skills_count }}</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 0.25rem;">Red Flags</div>
+                    <div style="font-size: 1.1rem; font-weight: bold; color: {% if candidate.high_flags > 0 %}#dc3545{% elif candidate.total_flags > 0 %}#ffc107{% else %}#28a745{% endif %};">
+                        {{ candidate.total_flags }}
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 0.25rem;">Added</div>
+                    <div style="font-size: 0.85rem; color: #495057;">{{ candidate.created_at.strftime('%b %d') }}</div>
+                </div>
+            </div>
+            
+            <a href="{{ url_for('candidate_detail', candidate_id=candidate.id, from='dashboard') }}" class="btn btn-primary" style="width: 100%; text-align: center; padding: 0.75rem; font-size: 0.9rem;">
+                View Full Profile →
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
 <div class="card">
-    <h3 style="margin-bottom: 1.5rem;">Recent Analysis</h3>
+    <h3 style="margin-bottom: 1.5rem;">Recent Job-Based Analysis</h3>
     
     {% if recent_analyses %}
     <table>
@@ -69,6 +124,9 @@
                 </td>
                 <td>{{ analysis.analyzed_at.strftime('%Y-%m-%d %H:%M') }}</td>
                 <td style="white-space: nowrap;">
+                    <a href="{{ url_for('candidate_detail', candidate_id=analysis.candidate_id, from='dashboard') }}" class="btn" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; background: #667eea; color: white; border: none; border-radius: 4px; text-decoration: none; margin-right: 0.5rem;">
+                        👤 View Profile
+                    </a>
                     <a href="{{ url_for('download_resume', candidate_id=analysis.candidate_id) }}" class="btn" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; background: #28a745; color: white; border: none; border-radius: 4px; text-decoration: none;">
                         📥 Download
                     </a>
@@ -78,7 +136,7 @@
         </tbody>
     </table>
     {% else %}
-    <p style="text-align: center; color: #6c757d; padding: 2rem;">No analyses yet. Upload resumes to get started!</p>
+    <p style="text-align: center; color: #6c757d; padding: 2rem;">No job-based analyses yet. Upload resumes to specific jobs to get started!</p>
     {% endif %}
 </div>
 

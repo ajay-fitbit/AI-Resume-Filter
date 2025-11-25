@@ -42,11 +42,11 @@
                 </td>
                 <td>{{ job.created_at.strftime('%Y-%m-%d') }}</td>
                 <td style="white-space: nowrap;">
-                    <a href="{{ url_for('candidates', job_id=job.id) }}" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem; margin-right: 0.5rem;">
+                    <a href="{{ url_for('candidates', job_id=job.id) }}" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem; margin-right: 0.5rem; min-width: 140px; text-align: center;">
                         View Candidates
                     </a>
                     <form method="POST" action="{{ url_for('delete_job', job_id=job.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this job? This will also delete all associated candidates and analysis results.');">
-                        <button type="submit" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.9rem; background: #dc3545;">
+                        <button type="submit" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #dc3545; border: none; border-radius: 8px; cursor: pointer; min-width: 90px; display: inline-block; line-height: 1.5; vertical-align: middle;">
                             🗑️ Delete
                         </button>
                     </form>
