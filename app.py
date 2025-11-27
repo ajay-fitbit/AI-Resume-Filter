@@ -39,7 +39,7 @@ def _generate_candidate_profile(skills, experience_years):
         "DevOps Engineer": ["Docker", "Kubernetes", "Jenkins", "CI/CD", "AWS", "Azure", "GCP", "Terraform", "Ansible", "Linux", "Git"],
         "Data Scientist": ["Python", "Machine Learning", "Deep Learning", "TensorFlow", "PyTorch", "Pandas", "NumPy", "Data Science", "R", "Scikit-learn"],
         "Cloud Engineer": ["AWS", "Azure", "GCP", "Docker", "Kubernetes", "Terraform", "CloudFormation", "Lambda", "EC2", "S3"],
-        "Mobile Developer": ["Swift", "Kotlin", "React", "iOS", "Android", "Flutter", "React Native"],
+        "Mobile Developer": ["Swift", "Kotlin", "React", "iOS", "Android", "Flutter", "React Native", "Jetpack Compose", "SwiftUI", "Xamarin", "Ionic", "Cordova", "Android Studio", "Xcode", "Firebase", "Room", "Realm", "SQLite", "Retrofit", "Alamofire", "Material Design", "UIKit", "Core Data", "Push Notifications", "In-App Purchases", "Google Play", "App Store"],
         "QA Engineer": ["Selenium", "Testing", "QA", "Automated Testing", "Pytest", "JUnit", "TestNG", "Cypress", "JIRA"],
         "Database Administrator": ["SQL", "MySQL", "PostgreSQL", "Oracle", "MongoDB", "Redis", "Database", "DynamoDB"],
         "AI/ML Engineer": ["Machine Learning", "Deep Learning", "AI", "TensorFlow", "PyTorch", "NLP", "LLM", "GPT", "BERT", "Transformer"]
@@ -388,7 +388,10 @@ def bulk_analysis():
     conn = create_connection()
     if not conn:
         flash('Database connection error', 'error')
-        return render_template('bulk_analysis.html', candidates=[])
+        return render_template('bulk_analysis.html', candidates=[], jobs=[])
+    
+    # Get all job descriptions for dropdown
+    jobs = fetch_query(conn, "SELECT id, title FROM job_descriptions ORDER BY created_at DESC")
     
     # Get all candidates with their resume data and red flags
     query = """
@@ -431,7 +434,7 @@ def bulk_analysis():
             candidate['skills_count'] = 0
     
     conn.close()
-    return render_template('bulk_analysis.html', candidates=candidates_list)
+    return render_template('bulk_analysis.html', candidates=candidates_list, jobs=jobs)
 
 @app.route('/candidates')
 def candidates():
@@ -849,6 +852,133 @@ def rag_query():
     except Exception as e:
         print(f"RAG Query Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/match_candidate', methods=['POST'])
+def match_candidate():
+    """Match a bulk uploaded candidate with a specific job description"""
+    try:
+        data = request.get_json()
+        candidate_id = data.get('candidate_id')
+        job_id = data.get('job_id')
+        
+        if not candidate_id or not job_id:
+            return jsonify({"success": False, "error": "Missing candidate_id or job_id"}), 400
+        
+        conn = create_connection()
+        if not conn:
+            return jsonify({"success": False, "error": "Database connection error"}), 500
+        
+        # Get job description
+        job_result = fetch_query(conn, 
+            "SELECT title, description, required_skills, required_experience FROM job_descriptions WHERE id = %s", 
+            (job_id,)
+        )
+        if not job_result:
+            conn.close()
+            return jsonify({"success": False, "error": "Job description not found"}), 404
+        
+        job = job_result[0]
+        
+        # Get candidate resume data including file path
+        candidate_result = fetch_query(conn,
+            "SELECT c.id, c.name, c.resume_path FROM candidates c WHERE c.id = %s",
+            (candidate_id,)
+        )
+        if not candidate_result:
+            conn.close()
+            return jsonify({"success": False, "error": "Candidate not found"}), 404
+        
+        candidate = candidate_result[0]
+        
+        if not candidate.get('resume_path') or not os.path.exists(candidate['resume_path']):
+            conn.close()
+            return jsonify({"success": False, "error": "Resume file not found"}), 404
+        
+        # Check if analysis already exists
+        existing = fetch_query(conn,
+            "SELECT id FROM analysis_results WHERE candidate_id = %s AND job_description_id = %s",
+            (candidate_id, job_id)
+        )
+        
+        # Run orchestrator analysis
+        print(f"🎯 Matching candidate {candidate['name']} with job {job['title']}")
+        
+        # Ensure required_experience is an integer
+        required_exp = job.get('required_experience')
+        if required_exp is None:
+            required_exp = 0
+        
+        agent_result = orchestrator.execute({
+            "file_path": candidate['resume_path'],
+            "job_description": job['description'],
+            "required_experience": int(required_exp)
+        })
+        
+        if not agent_result.get("success"):
+            conn.close()
+            return jsonify({"success": False, "error": "Analysis failed"}), 500
+        
+        result = agent_result['scores']
+        tier = agent_result['tier']
+        explanation = agent_result['explanation']
+        
+        # Store or update analysis results
+        if existing:
+            # Update existing analysis
+            update_query = """
+                UPDATE analysis_results 
+                SET match_score = %s, skill_match_score = %s, experience_match_score = %s,
+                    keyword_match_score = %s, semantic_similarity_score = %s, tier = %s,
+                    explanation = %s, analyzed_at = NOW()
+                WHERE candidate_id = %s AND job_description_id = %s
+            """
+            execute_query(conn, update_query, (
+                result['overall_score'],
+                result['skill_match_score'],
+                result['experience_match_score'],
+                result['keyword_match_score'],
+                result['semantic_similarity_score'],
+                tier,
+                explanation,
+                candidate_id,
+                job_id
+            ))
+        else:
+            # Insert new analysis
+            insert_query = """
+                INSERT INTO analysis_results 
+                (candidate_id, job_description_id, match_score, skill_match_score, 
+                experience_match_score, keyword_match_score, semantic_similarity_score, 
+                tier, explanation)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            execute_query(conn, insert_query, (
+                candidate_id,
+                job_id,
+                result['overall_score'],
+                result['skill_match_score'],
+                result['experience_match_score'],
+                result['keyword_match_score'],
+                result['semantic_similarity_score'],
+                tier,
+                explanation
+            ))
+        
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "match_score": round(result['overall_score'], 1),
+            "tier": tier,
+            "candidate_name": candidate['name'],
+            "job_title": job['title']
+        }), 200
+        
+    except Exception as e:
+        print(f"Match Candidate Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
     # Ensure upload folder exists

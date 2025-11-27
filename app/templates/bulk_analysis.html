@@ -43,6 +43,44 @@
     </div>
 </div>
 
+<!-- Job Matching Section -->
+<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 1.5rem;">
+    <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+        🎯 Match Candidates with Job Descriptions
+    </h4>
+    <p style="opacity: 0.9; margin-bottom: 1rem; line-height: 1.6;">
+        Select a job description and use checkboxes to match multiple candidates at once, or click individual <strong>"Match with Job"</strong> buttons.
+    </p>
+    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+        <label for="job-selector" style="font-weight: 600; font-size: 0.95rem;">Select Job Description:</label>
+        <select id="job-selector" onchange="updateJobSelection()" style="flex: 1; min-width: 250px; padding: 0.6rem 1rem; border-radius: 8px; border: 2px solid white; background: white; color: #2d3748; font-size: 0.9rem; font-weight: 500; cursor: pointer;">
+            <option value="">-- Select a Job --</option>
+            {% for job in jobs %}
+            <option value="{{ job.id }}">{{ job.title }}</option>
+            {% endfor %}
+        </select>
+        <button onclick="viewSelectedJob()" id="view-job-btn" disabled style="padding: 0.6rem 1.25rem; border-radius: 8px; background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.6); border: 2px solid rgba(255,255,255,0.4); cursor: not-allowed; font-weight: 600; font-size: 0.9rem; transition: all 0.3s;">
+            👁️ View Job Details
+        </button>
+    </div>
+    <div id="bulk-match-controls" style="display: none; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.3);">
+        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; cursor: pointer;">
+                <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll()" style="width: 18px; height: 18px; cursor: pointer;">
+                <span>Select All Candidates</span>
+            </label>
+            <span id="selected-count" style="background: rgba(255,255,255,0.3); padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 600;">0 selected</span>
+            <button onclick="matchSelectedCandidates()" id="match-selected-btn" disabled style="padding: 0.6rem 1.5rem; border-radius: 8px; background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.6); border: 2px solid rgba(255,255,255,0.4); cursor: not-allowed; font-weight: 600; font-size: 0.9rem; transition: all 0.3s; margin-left: auto;">
+                🎯 Match Selected Candidates
+            </button>
+        </div>
+    </div>
+    <div id="selected-job-info" style="margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.2); border-radius: 8px; display: none;">
+        <div style="font-weight: 600; margin-bottom: 0.5rem;">Selected Job:</div>
+        <div id="job-title-display" style="font-size: 1.1rem; font-weight: bold;"></div>
+    </div>
+</div>
+
 <!-- Collapse/Expand All Controls -->
 <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-bottom: 1rem;">
     <button onclick="expandAll()" class="btn" style="background: #667eea; color: white; border: none; padding: 0.6rem 1.25rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.3s;" onmouseover="this.style.background='#5568d3'" onmouseout="this.style.background='#667eea'">
@@ -58,12 +96,13 @@
     {% for candidate in candidates %}
     <div class="card" style="margin-bottom: 0.75rem; border-left: 4px solid {% if candidate.high_flags > 0 %}#dc3545{% elif candidate.experience_years >= 5 %}#28a745{% else %}#667eea{% endif %}; padding: 0; overflow: hidden;">
         <!-- Collapsed Header (Always Visible) -->
-        <div onclick="toggleCandidate({{ candidate.id }})" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(102, 126, 234, 0.05)'" onmouseout="this.style.background='white'">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; transition: background 0.2s;">
             <div style="display: flex; align-items: center; gap: 1.5rem; flex: 1;">
-                <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; font-weight: bold; flex-shrink: 0;">
+                <input type="checkbox" class="candidate-checkbox" data-candidate-id="{{ candidate.id }}" data-candidate-name="{{ candidate.name }}" onchange="updateSelectedCount()" onclick="event.stopPropagation()" style="width: 20px; height: 20px; cursor: pointer; display: none; flex-shrink: 0;">
+                <div onclick="toggleCandidate({{ candidate.id }})" style="width: 45px; height: 45px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; font-weight: bold; flex-shrink: 0; cursor: pointer;">
                     {{ candidate.name[0].upper() }}
                 </div>
-                <div style="flex: 1; min-width: 0;">
+                <div onclick="toggleCandidate({{ candidate.id }})" style="flex: 1; min-width: 0; cursor: pointer;">
                     <h4 style="margin: 0 0 0.25rem 0; color: #2d3748; font-size: 1.1rem;">{{ candidate.name }}</h4>
                     <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
                         <span style="color: #6c757d; font-size: 0.9rem;">
@@ -86,7 +125,7 @@
                     </div>
                 </div>
             </div>
-            <div id="toggle-icon-{{ candidate.id }}" style="color: #667eea; font-size: 1.5rem; font-weight: bold; transition: transform 0.3s; flex-shrink: 0;">
+            <div id="toggle-icon-{{ candidate.id }}" onclick="toggleCandidate({{ candidate.id }})" style="color: #667eea; font-size: 1.5rem; font-weight: bold; transition: transform 0.3s; flex-shrink: 0; cursor: pointer;">
                 +
             </div>
         </div>
@@ -223,6 +262,9 @@
                 </div>
                 
                 <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <button onclick="matchWithJob({{ candidate.id }}, '{{ candidate.name }}')" class="match-job-btn" data-candidate-id="{{ candidate.id }}" disabled style="text-align: center; padding: 0.75rem; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: not-allowed; font-weight: 600; transition: all 0.3s;">
+                        🎯 Match with Job
+                    </button>
                     <a href="{{ url_for('candidate_detail', candidate_id=candidate.id, from='bulk_analysis') }}" class="btn btn-primary" style="text-align: center; padding: 0.75rem;">
                         📋 Full Details
                     </a>
@@ -247,12 +289,13 @@
     {% for candidate in candidates %}
     <div class="mobile-card" style="border-left: 4px solid {% if candidate.high_flags > 0 %}#dc3545{% elif candidate.experience_years >= 5 %}#28a745{% else %}#667eea{% endif %}; padding: 0; overflow: hidden;">
         <!-- Collapsed Header (Always Visible) -->
-        <div onclick="toggleCandidate({{ candidate.id }})" style="padding: 1rem; cursor: pointer; transition: background 0.2s;" ontouchstart="this.style.background='rgba(102, 126, 234, 0.05)'" ontouchend="this.style.background='white'">
+        <div style="padding: 1rem; transition: background 0.2s;">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
-                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.3rem; font-weight: bold; flex-shrink: 0;">
+                <input type="checkbox" class="candidate-checkbox" data-candidate-id="{{ candidate.id }}" data-candidate-name="{{ candidate.name }}" onchange="updateSelectedCount()" onclick="event.stopPropagation()" style="width: 20px; height: 20px; cursor: pointer; display: none; flex-shrink: 0;">
+                <div onclick="toggleCandidate({{ candidate.id }})" style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.3rem; font-weight: bold; flex-shrink: 0; cursor: pointer;">
                     {{ candidate.name[0].upper() }}
                 </div>
-                <div style="flex: 1; min-width: 0;">
+                <div onclick="toggleCandidate({{ candidate.id }})" style="flex: 1; min-width: 0; cursor: pointer;">
                     <h4 style="margin: 0 0 0.25rem 0; color: #212529; font-size: 1rem;">{{ candidate.name }}</h4>
                     <div style="color: #6c757d; font-size: 0.85rem;">
                         <strong style="color: #667eea;">{{ candidate.experience_years }}</strong> years • 
@@ -262,7 +305,7 @@
                         {% endif %}
                     </div>
                 </div>
-                <div id="toggle-icon-{{ candidate.id }}" style="color: #667eea; font-size: 1.5rem; font-weight: bold; transition: transform 0.3s; flex-shrink: 0;">
+                <div id="toggle-icon-{{ candidate.id }}" onclick="toggleCandidate({{ candidate.id }})" style="color: #667eea; font-size: 1.5rem; font-weight: bold; transition: transform 0.3s; flex-shrink: 0; cursor: pointer;">
                     +
                 </div>
             </div>
@@ -357,6 +400,9 @@
         </div>
         
         <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <button onclick="matchWithJob({{ candidate.id }}, '{{ candidate.name }}')" class="match-job-btn" data-candidate-id="{{ candidate.id }}" disabled style="text-align: center; padding: 0.75rem; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: not-allowed; font-weight: 600; transition: all 0.3s;">
+                🎯 Match with Job
+            </button>
             <a href="{{ url_for('candidate_detail', candidate_id=candidate.id, from='bulk_analysis') }}" class="btn btn-primary" style="text-align: center; padding: 0.75rem;">
                 📋 Full Details
             </a>
@@ -388,6 +434,260 @@
 {% endif %}
 
 <script>
+let selectedJobId = null;
+
+function updateJobSelection() {
+    const selector = document.getElementById('job-selector');
+    selectedJobId = selector.value;
+    const viewBtn = document.getElementById('view-job-btn');
+    const jobInfo = document.getElementById('selected-job-info');
+    const jobTitleDisplay = document.getElementById('job-title-display');
+    const matchButtons = document.querySelectorAll('.match-job-btn');
+    const bulkMatchControls = document.getElementById('bulk-match-controls');
+    const checkboxes = document.querySelectorAll('.candidate-checkbox');
+    
+        if (selectedJobId) {
+        // Enable view button and match buttons
+        viewBtn.disabled = false;
+        viewBtn.style.background = 'white';
+        viewBtn.style.color = '#667eea';
+        viewBtn.style.cursor = 'pointer';        // Show job info and bulk controls
+        jobInfo.style.display = 'block';
+        bulkMatchControls.style.display = 'block';
+        jobTitleDisplay.textContent = selector.options[selector.selectedIndex].text;
+        
+        // Show checkboxes
+        checkboxes.forEach(cb => {
+            cb.style.display = 'block';
+        });
+        
+        // Enable all match buttons
+        matchButtons.forEach(btn => {
+            btn.disabled = false;
+            btn.style.background = '#17a2b8';
+            btn.style.cursor = 'pointer';
+        });
+    } else {
+        // Disable view button and match buttons
+        viewBtn.disabled = true;
+        viewBtn.style.background = 'rgba(255,255,255,0.2)';
+        viewBtn.style.color = 'rgba(255,255,255,0.6)';
+        viewBtn.style.cursor = 'not-allowed';
+        
+        // Hide job info and bulk controls
+        jobInfo.style.display = 'none';
+        bulkMatchControls.style.display = 'none';
+        
+        // Hide checkboxes and uncheck all
+        checkboxes.forEach(cb => {
+            cb.style.display = 'none';
+            cb.checked = false;
+        });
+        
+        // Disable all match buttons
+        matchButtons.forEach(btn => {
+            btn.disabled = true;
+            btn.style.background = '#6c757d';
+            btn.style.cursor = 'not-allowed';
+        });
+        
+        updateSelectedCount();
+    }
+}
+
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const checkboxes = document.querySelectorAll('.candidate-checkbox');
+    
+    const isChecked = selectAllCheckbox.checked;
+    
+    checkboxes.forEach(cb => {
+        cb.checked = isChecked;
+    });
+    
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const checkboxes = document.querySelectorAll('.candidate-checkbox:checked');
+    const count = checkboxes.length;
+    const countDisplay = document.getElementById('selected-count');
+    const matchBtn = document.getElementById('match-selected-btn');
+    
+    if (countDisplay) {
+        countDisplay.textContent = `${count} selected`;
+    }
+    
+    if (matchBtn) {
+        if (count > 0 && selectedJobId) {
+            matchBtn.disabled = false;
+            matchBtn.style.background = 'white';
+            matchBtn.style.color = '#667eea';
+            matchBtn.style.cursor = 'pointer';
+        } else {
+            matchBtn.disabled = true;
+            matchBtn.style.background = 'rgba(255,255,255,0.2)';
+            matchBtn.style.color = 'rgba(255,255,255,0.6)';
+            matchBtn.style.cursor = 'not-allowed';
+        }
+    }
+    
+    // Update select all checkbox state
+    const allCheckboxes = document.querySelectorAll('.candidate-checkbox');
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    
+    if (allCheckboxes.length > 0 && selectAllCheckbox) {
+        const allChecked = Array.from(allCheckboxes).every(cb => cb.checked);
+        selectAllCheckbox.checked = allChecked;
+    }
+}
+
+function matchSelectedCandidates() {
+    if (!selectedJobId) {
+        alert('Please select a job description first!');
+        return;
+    }
+    
+    const checkboxes = document.querySelectorAll('.candidate-checkbox:checked');
+    if (checkboxes.length === 0) {
+        alert('Please select at least one candidate!');
+        return;
+    }
+    
+    const candidates = Array.from(checkboxes).map(cb => ({
+        id: cb.dataset.candidateId,
+        name: cb.dataset.candidateName
+    }));
+    
+    if (!confirm(`Match ${candidates.length} candidate(s) with the selected job?\n\nThis will run AI analysis for all selected candidates.`)) {
+        return;
+    }
+    
+    const btn = document.getElementById('match-selected-btn');
+    btn.innerHTML = '⏳ Processing...';
+    btn.disabled = true;
+    btn.style.cursor = 'wait';
+    
+    // Process candidates sequentially
+    processCandidatesBatch(candidates, 0);
+}
+
+function processCandidatesBatch(candidates, index) {
+    if (index >= candidates.length) {
+        // All done
+        const btn = document.getElementById('match-selected-btn');
+        btn.innerHTML = '✅ All Matched!';
+        btn.style.background = '#28a745';
+        
+        setTimeout(() => {
+            btn.innerHTML = '🎯 Match Selected Candidates';
+            btn.style.background = 'white';
+            btn.style.color = '#667eea';
+            btn.disabled = false;
+            btn.style.cursor = 'pointer';
+            
+            // Uncheck all
+            document.querySelectorAll('.candidate-checkbox').forEach(cb => cb.checked = false);
+            updateSelectedCount();
+        }, 2000);
+        
+        alert(`✅ Successfully matched ${candidates.length} candidate(s)!\n\nClick "View Job Details" to see rankings.`);
+        return;
+    }
+    
+    const candidate = candidates[index];
+    
+    fetch('/api/match_candidate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            candidate_id: candidate.id,
+            job_id: selectedJobId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log(`✅ Matched: ${candidate.name}`);
+        } else {
+            console.error(`❌ Failed: ${candidate.name} - ${data.error}`);
+        }
+        // Process next candidate
+        processCandidatesBatch(candidates, index + 1);
+    })
+    .catch(error => {
+        console.error(`❌ Error matching ${candidate.name}:`, error);
+        // Continue with next candidate even if one fails
+        processCandidatesBatch(candidates, index + 1);
+    });
+}
+
+function viewSelectedJob() {
+    if (selectedJobId) {
+        window.location.href = `/candidates?job_id=${selectedJobId}`;
+    }
+}
+
+function matchWithJob(candidateId, candidateName) {
+    if (!selectedJobId) {
+        alert('Please select a job description first!');
+        return;
+    }
+    
+    if (!confirm(`Match ${candidateName} with the selected job?\n\nThis will run AI analysis and create a ranking result.`)) {
+        return;
+    }
+    
+    const btn = document.querySelector(`.match-job-btn[data-candidate-id="${candidateId}"]`);
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Analyzing...';
+    btn.disabled = true;
+    btn.style.background = '#ffc107';
+    btn.style.cursor = 'wait';
+    
+    // Call API to match candidate with job
+    fetch('/api/match_candidate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            candidate_id: candidateId,
+            job_id: selectedJobId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`✅ Success!\n\n${candidateName} matched with job.\nMatch Score: ${data.match_score}%\nTier: ${data.tier}\n\nClick "View Job Details" to see full ranking.`);
+            btn.innerHTML = '✅ Matched!';
+            btn.style.background = '#28a745';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.background = '#17a2b8';
+                btn.disabled = false;
+                btn.style.cursor = 'pointer';
+            }, 3000);
+        } else {
+            alert(`❌ Error: ${data.error}`);
+            btn.innerHTML = originalText;
+            btn.style.background = '#17a2b8';
+            btn.disabled = false;
+            btn.style.cursor = 'pointer';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Failed to match candidate. Please try again.');
+        btn.innerHTML = originalText;
+        btn.style.background = '#17a2b8';
+        btn.disabled = false;
+        btn.style.cursor = 'pointer';
+    });
+}
+
 function toggleCandidate(candidateId) {
     const details = document.getElementById(`details-${candidateId}`);
     const icon = document.getElementById(`toggle-icon-${candidateId}`);
