@@ -31,19 +31,27 @@ def _generate_candidate_profile(skills, experience_years):
     """Generate a profile summary indicating what roles the candidate would be good for"""
     skills = [s.strip() for s in skills if s.strip()]
     
-    # Define role categories based on skills
-    role_profiles = {
-        "Full Stack Developer": ["React", "Angular", "Vue", "Node.js", "JavaScript", "TypeScript", "Python", "Java", "Django", "Flask", "Express", "MongoDB", "PostgreSQL", "MySQL"],
-        "Frontend Developer": ["React", "Angular", "Vue", "JavaScript", "TypeScript", "HTML", "CSS", "Bootstrap", "Tailwind", "jQuery", "Webpack"],
-        "Backend Developer": ["Python", "Java", "Node.js", "C#", ".NET", "PHP", "Ruby", "Go", "Django", "Flask", "Spring", "Express", "API", "REST"],
-        "DevOps Engineer": ["Docker", "Kubernetes", "Jenkins", "CI/CD", "AWS", "Azure", "GCP", "Terraform", "Ansible", "Linux", "Git"],
-        "Data Scientist": ["Python", "Machine Learning", "Deep Learning", "TensorFlow", "PyTorch", "Pandas", "NumPy", "Data Science", "R", "Scikit-learn"],
-        "Cloud Engineer": ["AWS", "Azure", "GCP", "Docker", "Kubernetes", "Terraform", "CloudFormation", "Lambda", "EC2", "S3"],
-        "Mobile Developer": ["Swift", "Kotlin", "React", "iOS", "Android", "Flutter", "React Native", "Jetpack Compose", "SwiftUI", "Xamarin", "Ionic", "Cordova", "Android Studio", "Xcode", "Firebase", "Room", "Realm", "SQLite", "Retrofit", "Alamofire", "Material Design", "UIKit", "Core Data", "Push Notifications", "In-App Purchases", "Google Play", "App Store"],
-        "QA Engineer": ["Selenium", "Testing", "QA", "Automated Testing", "Pytest", "JUnit", "TestNG", "Cypress", "JIRA"],
-        "Database Administrator": ["SQL", "MySQL", "PostgreSQL", "Oracle", "MongoDB", "Redis", "Database", "DynamoDB"],
-        "AI/ML Engineer": ["Machine Learning", "Deep Learning", "AI", "TensorFlow", "PyTorch", "NLP", "LLM", "GPT", "BERT", "Transformer"]
-    }
+    # Try to load role profiles from database, fall back to hardcoded if empty
+    try:
+        from app.database_config import get_roles_with_fallback
+        role_profiles = get_roles_with_fallback()
+    except Exception as e:
+        print(f"Note: Using hardcoded role profiles (database not set up yet): {e}")
+        # Fallback: Define role categories based on skills (hardcoded)
+        role_profiles = {
+            "Full Stack Developer": ["React", "Angular", "Vue", "Node.js", "JavaScript", "TypeScript", "Python", "Java", "Django", "Flask", "Express", "MongoDB", "PostgreSQL", "MySQL"],
+            "Frontend Developer": ["React", "Angular", "Vue", "JavaScript", "TypeScript", "HTML", "CSS", "Bootstrap", "Tailwind", "jQuery", "Webpack"],
+            "Backend Developer": ["Python", "Java", "Node.js", "C#", ".NET", "PHP", "Ruby", "Go", "Django", "Flask", "Spring", "Express", "API", "REST"],
+            "DevOps Engineer": ["Docker", "Kubernetes", "Jenkins", "CI/CD", "AWS", "Azure", "GCP", "Terraform", "Ansible", "Linux", "Git"],
+            "Data Scientist": ["Python", "Machine Learning", "Deep Learning", "TensorFlow", "PyTorch", "Pandas", "NumPy", "Data Science", "R", "Scikit-learn"],
+            "Cloud Engineer": ["AWS", "Azure", "GCP", "Docker", "Kubernetes", "Terraform", "CloudFormation", "Lambda", "EC2", "S3"],
+            "Mobile Developer": ["Swift", "Kotlin", "React", "iOS", "Android", "Flutter", "React Native", "Jetpack Compose", "SwiftUI", "Xamarin", "Ionic", "Cordova", "Android Studio", "Xcode", "Firebase", "Room", "Realm", "SQLite", "Retrofit", "Alamofire", "Material Design", "UIKit", "Core Data", "Push Notifications", "In-App Purchases", "Google Play", "App Store"],
+            "QA Engineer": ["Selenium", "Testing", "QA", "Automated Testing", "Pytest", "JUnit", "TestNG", "Cypress", "JIRA"],
+            "Database Administrator": ["SQL", "MySQL", "PostgreSQL", "Oracle", "MongoDB", "Redis", "Database", "DynamoDB", "SQL Server"],
+            "AI/ML Engineer": ["Machine Learning", "Deep Learning", "AI", "TensorFlow", "PyTorch", "NLP", "LLM", "GPT", "BERT", "Transformer", "ChromaDB", "Pinecone", "Vector Store", "Embeddings", "RAG"],
+            "BI Developer": ["Power BI", "Tableau", "Looker", "Qlik", "SQL", "DAX", "Power Query", "Data Modeling", "ETL", "SSRS", "SSIS", "SSAS", "Crystal Reports", "Cognos", "MicroStrategy", "Data Visualization"],
+            "Data Engineer": ["Python", "SQL", "Spark", "Kafka", "Airflow", "ETL", "Data Pipeline", "Big Data", "Hadoop", "AWS Glue", "Azure Data Factory", "Databricks", "Snowflake", "dbt"]
+        }
     
     # Calculate match scores for each role
     role_matches = {}
@@ -979,6 +987,335 @@ def match_candidate():
         import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
+
+# ============================================================
+# ADMIN CONFIGURATION ROUTES
+# ============================================================
+
+@app.route('/admin/config')
+def admin_config():
+    """Admin page for managing skills, variations, and role profiles"""
+    return render_template('admin_config.html')
+
+# Skill Categories Management APIs
+@app.route('/api/admin/categories', methods=['GET'])
+def get_categories():
+    """Get all skill categories"""
+    conn = create_connection()
+    
+    query = """
+        SELECT id, category_name, description, display_order, icon, color, is_active,
+               (SELECT COUNT(*) FROM skills WHERE category_id = skill_categories.id) as skill_count
+        FROM skill_categories
+        ORDER BY display_order, category_name
+    """
+    
+    categories = fetch_query(conn, query)
+    conn.close()
+    
+    return jsonify(categories)
+
+@app.route('/api/admin/categories', methods=['POST'])
+def add_category():
+    """Add a new skill category"""
+    data = request.json
+    category_name = data.get('category_name')
+    description = data.get('description', '')
+    icon = data.get('icon', '🔧')
+    color = data.get('color', '#6b7280')
+    
+    conn = create_connection()
+    
+    # Get max display_order
+    max_order = fetch_query(conn, "SELECT COALESCE(MAX(display_order), 0) as max_order FROM skill_categories")
+    display_order = max_order[0]['max_order'] + 1 if max_order else 1
+    
+    query = """
+        INSERT INTO skill_categories (category_name, description, icon, color, display_order, is_active)
+        VALUES (%s, %s, %s, %s, %s, 1)
+    """
+    execute_query(conn, query, (category_name, description, icon, color, display_order))
+    conn.close()
+    
+    return jsonify({"success": True}), 201
+
+@app.route('/api/admin/categories/<int:category_id>', methods=['PUT'])
+def update_category(category_id):
+    """Update category details"""
+    data = request.json
+    category_name = data.get('category_name')
+    description = data.get('description', '')
+    icon = data.get('icon', '🔧')
+    color = data.get('color', '#6b7280')
+    
+    conn = create_connection()
+    query = """
+        UPDATE skill_categories 
+        SET category_name = %s, description = %s, icon = %s, color = %s
+        WHERE id = %s
+    """
+    execute_query(conn, query, (category_name, description, icon, color, category_id))
+    conn.close()
+    
+    return jsonify({"success": True})
+
+@app.route('/api/admin/categories/<int:category_id>/toggle', methods=['PUT'])
+def toggle_category_status(category_id):
+    """Toggle category active status"""
+    data = request.json
+    is_active = data.get('is_active')
+    
+    conn = create_connection()
+    query = "UPDATE skill_categories SET is_active = %s WHERE id = %s"
+    execute_query(conn, query, (is_active, category_id))
+    conn.close()
+    
+    return jsonify({"success": True})
+
+@app.route('/api/admin/categories/<int:category_id>', methods=['DELETE'])
+def delete_category(category_id):
+    """Delete a category (only if no skills are using it)"""
+    conn = create_connection()
+    
+    # Check if category has skills
+    check = fetch_query(conn, "SELECT COUNT(*) as count FROM skills WHERE category_id = %s", (category_id,))
+    if check[0]['count'] > 0:
+        conn.close()
+        return jsonify({"success": False, "error": "Cannot delete category with existing skills"}), 400
+    
+    query = "DELETE FROM skill_categories WHERE id = %s"
+    execute_query(conn, query, (category_id,))
+    conn.close()
+    
+    return jsonify({"success": True})
+
+# Skills Management APIs
+@app.route('/api/admin/skills', methods=['GET'])
+def get_skills():
+    """Get all skills with their variations"""
+    conn = create_connection()
+    
+    query = """
+        SELECT s.id, s.skill_name, sc.category_name as category, s.description, s.is_active,
+               GROUP_CONCAT(sv.variation_name SEPARATOR ', ') as variations
+        FROM skills s
+        JOIN skill_categories sc ON s.category_id = sc.id
+        LEFT JOIN skill_variations sv ON s.id = sv.skill_id AND sv.is_active = 1
+        GROUP BY s.id, s.skill_name, sc.category_name, s.description, s.is_active
+        ORDER BY sc.display_order, s.skill_name
+    """
+    
+    skills = fetch_query(conn, query)
+    conn.close()
+    
+    return jsonify(skills)
+
+@app.route('/api/admin/skills', methods=['POST'])
+def add_skill():
+    """Add a new skill with variations"""
+    data = request.json
+    skill_name = data.get('skill_name')
+    category_id = data.get('category_id')
+    variations = data.get('variations', '')
+    
+    conn = create_connection()
+    
+    # Insert skill and get the skill ID
+    insert_skill = """
+        INSERT INTO skills (skill_name, category_id, is_active) 
+        VALUES (%s, %s, 1)
+    """
+    skill_id = execute_query(conn, insert_skill, (skill_name, category_id))
+    
+    # Insert variations
+    if variations and skill_id:
+        variation_list = [v.strip() for v in variations.split(',') if v.strip()]
+        for variation in variation_list:
+            insert_variation = """
+                INSERT INTO skill_variations (skill_id, variation_name, is_active)
+                VALUES (%s, %s, 1)
+            """
+            execute_query(conn, insert_variation, (skill_id, variation))
+    
+    conn.close()
+    
+    return jsonify({"success": True}), 201
+
+@app.route('/api/admin/skills/<int:skill_id>', methods=['PUT'])
+def update_skill(skill_id):
+    """Update skill details"""
+    data = request.json
+    skill_name = data.get('skill_name')
+    category_id = data.get('category_id')
+    variations = data.get('variations', '')
+    
+    conn = create_connection()
+    
+    # Update skill
+    update_skill = "UPDATE skills SET skill_name = %s, category_id = %s WHERE id = %s"
+    execute_query(conn, update_skill, (skill_name, category_id, skill_id))
+    
+    # Delete existing variations
+    execute_query(conn, "DELETE FROM skill_variations WHERE skill_id = %s", (skill_id,))
+    
+    # Insert new variations
+    if variations:
+        variation_list = [v.strip() for v in variations.split(',') if v.strip()]
+        for variation in variation_list:
+            insert_variation = "INSERT INTO skill_variations (skill_id, variation_name, is_active) VALUES (%s, %s, 1)"
+            execute_query(conn, insert_variation, (skill_id, variation))
+    
+    conn.close()
+    
+    return jsonify({"success": True})
+
+@app.route('/api/admin/skills/<int:skill_id>/toggle', methods=['PUT'])
+def toggle_skill_status(skill_id):
+    """Toggle skill active status"""
+    data = request.json
+    is_active = data.get('is_active')
+    
+    conn = create_connection()
+    query = "UPDATE skills SET is_active = %s WHERE id = %s"
+    execute_query(conn, query, (is_active, skill_id))
+    conn.close()
+    
+    return jsonify({"success": True})
+
+@app.route('/api/admin/skills/<int:skill_id>', methods=['DELETE'])
+def delete_skill(skill_id):
+    """Delete a skill and its variations"""
+    conn = create_connection()
+    
+    # CASCADE will automatically delete variations
+    query = "DELETE FROM skills WHERE id = %s"
+    execute_query(conn, query, (skill_id,))
+    conn.close()
+    
+    return jsonify({"success": True})
+
+# Role Profile Management APIs
+@app.route('/api/admin/roles', methods=['GET'])
+def get_roles():
+    """Get all role profiles"""
+    conn = create_connection()
+    
+    query = """
+        SELECT id, role_name, description, is_active, created_at
+        FROM role_profiles
+        ORDER BY role_name
+    """
+    
+    roles = fetch_query(conn, query)
+    conn.close()
+    
+    return jsonify(roles)
+
+@app.route('/api/admin/roles', methods=['POST'])
+def add_role():
+    """Add a new role profile"""
+    data = request.json
+    role_name = data.get('role_name')
+    description = data.get('description', '')
+    
+    conn = create_connection()
+    
+    query = """
+        INSERT INTO role_profiles (role_name, description, is_active)
+        VALUES (%s, %s, 1)
+    """
+    execute_query(conn, query, (role_name, description))
+    conn.close()
+    
+    return jsonify({"success": True}), 201
+
+@app.route('/api/admin/roles/<int:role_id>', methods=['PUT'])
+def update_role(role_id):
+    """Update role profile"""
+    data = request.json
+    role_name = data.get('role_name')
+    description = data.get('description', '')
+    
+    conn = create_connection()
+    query = "UPDATE role_profiles SET role_name = %s, description = %s WHERE id = %s"
+    execute_query(conn, query, (role_name, description, role_id))
+    conn.close()
+    
+    return jsonify({"success": True})
+
+@app.route('/api/admin/roles/<int:role_id>/toggle', methods=['PUT'])
+def toggle_role_status(role_id):
+    """Toggle role active status"""
+    data = request.json
+    is_active = data.get('is_active')
+    
+    conn = create_connection()
+    query = "UPDATE role_profiles SET is_active = %s WHERE id = %s"
+    execute_query(conn, query, (is_active, role_id))
+    conn.close()
+    
+    return jsonify({"success": True})
+
+@app.route('/api/admin/roles/<int:role_id>', methods=['DELETE'])
+def delete_role(role_id):
+    """Delete a role profile"""
+    conn = create_connection()
+    
+    # CASCADE will automatically delete role-skill mappings
+    query = "DELETE FROM role_profiles WHERE id = %s"
+    execute_query(conn, query, (role_id,))
+    conn.close()
+    
+    return jsonify({"success": True})
+
+# Role-Skill Mapping APIs
+@app.route('/api/admin/roles/<int:role_id>/skills', methods=['GET'])
+def get_role_skills(role_id):
+    """Get all skills assigned to a role"""
+    conn = create_connection()
+    
+    query = """
+        SELECT rs.id, rs.skill_id, s.skill_name, sc.category_name as category
+        FROM role_skills rs
+        JOIN skills s ON rs.skill_id = s.id
+        JOIN skill_categories sc ON s.category_id = sc.id
+        WHERE rs.role_id = %s
+        ORDER BY s.skill_name
+    """
+    
+    skills = fetch_query(conn, query, (role_id,))
+    conn.close()
+    
+    return jsonify(skills)
+
+@app.route('/api/admin/role-skills', methods=['POST'])
+def add_role_skill():
+    """Add a skill to a role"""
+    data = request.json
+    role_id = data.get('role_id')
+    skill_id = data.get('skill_id')
+    
+    conn = create_connection()
+    
+    query = """
+        INSERT INTO role_skills (role_id, skill_id)
+        VALUES (%s, %s)
+    """
+    execute_query(conn, query, (role_id, skill_id))
+    conn.close()
+    
+    return jsonify({"success": True}), 201
+
+@app.route('/api/admin/role-skills/<int:role_id>/<int:skill_id>', methods=['DELETE'])
+def remove_role_skill(role_id, skill_id):
+    """Remove a skill from a role"""
+    conn = create_connection()
+    
+    query = "DELETE FROM role_skills WHERE role_id = %s AND skill_id = %s"
+    execute_query(conn, query, (role_id, skill_id))
+    conn.close()
+    
+    return jsonify({"success": True})
 
 if __name__ == '__main__':
     # Ensure upload folder exists

@@ -104,66 +104,76 @@ class SkillsAssessmentAgent(BaseAgent):
     
     def _extract_required_skills(self, job_description: str) -> List[str]:
         """Extract skills from job description"""
-        # Common skills database (must match resume_parser.py skills)
-        common_skills = [
-            # Programming Languages
-            'python', 'java', 'javascript', 'typescript', 'c++', 'c#', 'ruby', 'php', 'go', 'rust',
-            'scala', 'r', 'matlab', 'perl', 'swift', 'kotlin',
-            
-            # Databases
-            'sql', 'mysql', 'postgresql', 'mongodb', 'redis', 'oracle', 'sql server',
-            'cassandra', 'dynamodb', 'elasticsearch', 'snowflake', 'redshift', 'bigquery',
-            'mariadb', 'db2', 'sqlite', 'couchdb', 'neo4j', 'influxdb', 'timescaledb',
-            'hbase', 'amazon rds', 'azure sql', 'cosmos db', 'firebase', 'supabase',
-            'planetscale', 'cockroachdb', 'clickhouse', 'vertica', 'greenplum',
-            't-sql', 'tsql', 'pl/sql', 'plsql', 'pl-sql', 'mysql workbench', 'pgadmin',
-            'sql developer', 'stored procedures', 'triggers', 'views', 'indexes',
-            
-            # Cloud & DevOps
-            'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'terraform', 'ansible', 'jenkins',
-            'ci/cd', 'devops', 'cloudformation',
-            
-            # Web Frameworks
-            'react', 'angular', 'vue', 'node.js', 'express', 'django', 'flask', 'spring',
-            'asp.net', '.net', 'fastapi', 'laravel', 'rails',
-            
-            # Version Control
-            'git', 'github', 'gitlab', 'bitbucket', 'svn',
-            
-            # Methodologies
-            'agile', 'scrum', 'kanban', 'waterfall', 'tdd', 'bdd',
-            
-            # AI/ML & Data Science
-            'ai', 'machine learning', 'deep learning', 'nlp', 'llm', 'rag', 'computer vision',
-            'data science', 'tensorflow', 'pytorch', 'scikit-learn', 'pandas', 'numpy', 'keras',
-            'openai', 'chatgpt', 'gpt', 'bert', 'transformer', 'hugging face',
-            
-            # API & Architecture
-            'rest api', 'rest', 'api', 'graphql', 'soap', 'grpc', 'microservices',
-            
-            # Frontend
-            'html', 'css', 'sass', 'less', 'bootstrap', 'tailwind', 'jquery',
-            
-            # Testing
-            'selenium', 'jira', 'testng', 'junit', 'pytest', 'cucumber', 'cypress',
-            'qa', 'quality assurance', 'testing', 'automated testing', 'unit testing',
-            
-            # Data & Analytics
-            'etl', 'data warehouse', 'data pipeline', 'big data', 'hadoop', 'spark', 'kafka',
-            'tableau', 'power bi', 'looker', 'excel', 'qlik', 'qlikview', 'qlik sense',
-            'microstrategy', 'sap businessobjects', 'cognos', 'ssrs', 'ssis', 'ssas',
-            'dax', 'power query', 'data modeling', 'data visualization', 'alteryx',
-            'talend', 'informatica', 'pentaho', 'dbt', 'airflow', 'dagster', 'prefect',
-            'azure data factory', 'aws glue', 'fivetran', 'stitch', 'metabase', 'superset',
-            'redash', 'google data studio', 'mode analytics', 'sisense', 'domo',
-            'dataiku', 'databricks', 'synapse analytics', 'azure synapse',
-            
-            # Operating Systems
-            'linux', 'unix', 'windows', 'windows server', 'macos', 'bash', 'shell', 'powershell',
-            
-            # Other
-            'networking', 'security', 'vs code', 'visual studio', 'postman'
-        ]
+        # Try to load skills from database, fall back to hardcoded if empty
+        try:
+            from app.database_config import get_skills_with_fallback
+            common_skills = get_skills_with_fallback()
+        except Exception as e:
+            print(f"Note: Using hardcoded skills list (database not set up yet): {e}")
+            # Fallback: Common skills database (must match resume_parser.py skills)
+            common_skills = [
+                # Programming Languages
+                'python', 'java', 'javascript', 'typescript', 'c++', 'c#', 'ruby', 'php', 'go', 'rust',
+                'scala', 'r', 'matlab', 'perl', 'swift', 'kotlin',
+                
+                # Databases
+                'sql', 'mysql', 'postgresql', 'mongodb', 'redis', 'oracle', 'sql server',
+                'cassandra', 'dynamodb', 'elasticsearch', 'snowflake', 'redshift', 'bigquery',
+                'mariadb', 'db2', 'sqlite', 'couchdb', 'neo4j', 'influxdb', 'timescaledb',
+                'hbase', 'amazon rds', 'azure sql', 'cosmos db', 'firebase', 'supabase',
+                'planetscale', 'cockroachdb', 'clickhouse', 'vertica', 'greenplum',
+                't-sql', 'tsql', 'pl/sql', 'plsql', 'pl-sql', 'mysql workbench', 'pgadmin',
+                'sql developer', 'stored procedures', 'triggers', 'views', 'indexes',
+                
+                # Cloud & DevOps
+                'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'terraform', 'ansible', 'jenkins',
+                'ci/cd', 'devops', 'cloudformation',
+                
+                # Web Frameworks
+                'react', 'angular', 'vue', 'node.js', 'express', 'django', 'flask', 'spring',
+                'asp.net', '.net', 'fastapi', 'laravel', 'rails',
+                
+                # Version Control
+                'git', 'github', 'gitlab', 'bitbucket', 'svn',
+                
+                # Methodologies
+                'agile', 'scrum', 'kanban', 'waterfall', 'tdd', 'bdd',
+                
+                # AI/ML & Data Science
+                'ai', 'machine learning', 'deep learning', 'nlp', 'llm', 'rag', 'computer vision',
+                'data science', 'tensorflow', 'pytorch', 'scikit-learn', 'pandas', 'numpy', 'keras',
+                'openai', 'chatgpt', 'gpt', 'bert', 'transformer', 'hugging face',
+                
+                # API & Architecture
+                'rest api', 'rest', 'api', 'graphql', 'soap', 'grpc', 'microservices',
+                
+                # Frontend
+                'html', 'css', 'sass', 'less', 'bootstrap', 'tailwind', 'jquery',
+                
+                # Testing
+                'selenium', 'jira', 'testng', 'junit', 'pytest', 'cucumber', 'cypress',
+                'qa', 'quality assurance', 'testing', 'automated testing', 'unit testing',
+                
+                # Data & Analytics
+                'etl', 'data warehouse', 'data pipeline', 'big data', 'hadoop', 'spark', 'kafka',
+                'tableau', 'power bi', 'looker', 'excel', 'qlik', 'qlikview', 'qlik sense',
+                'microstrategy', 'sap businessobjects', 'cognos', 'crystal reports', 'ssrs', 'ssis', 'ssas',
+                'dax', 'power query', 'data modeling', 'data visualization', 'alteryx',
+                'talend', 'informatica', 'pentaho', 'dbt', 'airflow', 'dagster', 'prefect',
+                'azure data factory', 'aws glue', 'fivetran', 'stitch', 'metabase', 'superset',
+                'redash', 'google data studio', 'mode analytics', 'sisense', 'domo',
+                'dataiku', 'databricks', 'synapse analytics', 'azure synapse',
+                
+                # Vector Databases & Embeddings
+                'chromadb', 'pinecone', 'weaviate', 'milvus', 'qdrant', 'faiss', 'annoy',
+                'vector store', 'vector database', 'embeddings', 'vector search', 'similarity search',
+                
+                # Operating Systems
+                'linux', 'unix', 'windows', 'windows server', 'macos', 'bash', 'shell', 'powershell',
+                
+                # Other
+                'networking', 'security', 'vs code', 'visual studio', 'postman'
+            ]
         
         jd_lower = job_description.lower()
         found_skills = []
@@ -188,37 +198,55 @@ class SkillsAssessmentAgent(BaseAgent):
             if skill1 in skill2 or skill2 in skill1:
                 return True
         
-        # Common variations
-        variations = {
-            'javascript': ['js', 'node.js', 'nodejs'],
-            'typescript': ['ts'],
-            'python': ['py'],
-            'postgresql': ['postgres', 'psql'],
-            'mongodb': ['mongo'],
-            'kubernetes': ['k8s'],
-            'aws': ['amazon web services'],
-            'gcp': ['google cloud platform'],
-            'azure': ['microsoft azure'],
-            'ai': ['artificial intelligence'],
-            'llm': ['large language model', 'large language models'],
-            'rag': ['retrieval augmented generation', 'retrieval-augmented generation'],
-            'nlp': ['natural language processing'],
-            'ml': ['machine learning'],
-            'power bi': ['powerbi', 'pbi'],
-            'sql server': ['mssql', 'microsoft sql server'],
-            'ssrs': ['sql server reporting services'],
-            'ssis': ['sql server integration services'],
-            'ssas': ['sql server analysis services'],
-            'etl': ['extract transform load'],
-            'bi': ['business intelligence'],
-            'data warehouse': ['data warehousing', 'dwh'],
-            'cosmos db': ['cosmosdb'],
-            'dynamodb': ['dynamo db'],
-            'bigquery': ['big query'],
-            't-sql': ['tsql', 'transact-sql', 'transact sql'],
-            'pl/sql': ['plsql', 'pl-sql'],
-            'stored procedures': ['stored procedure', 'sproc', 'sprocs']
-        }
+        # Try to load skill variations from database, fall back to hardcoded
+        try:
+            from app.database_config import get_variations_with_fallback
+            variations = get_variations_with_fallback()
+        except Exception as e:
+            # Fallback: Common variations (hardcoded)
+            variations = {
+                'javascript': ['js', 'node.js', 'nodejs'],
+                'typescript': ['ts'],
+                'python': ['py'],
+                'postgresql': ['postgres', 'psql'],
+                'mongodb': ['mongo'],
+                'kubernetes': ['k8s'],
+                'aws': ['amazon web services'],
+                'gcp': ['google cloud platform'],
+                'azure': ['microsoft azure'],
+                'ai': ['artificial intelligence'],
+                'llm': ['large language model', 'large language models'],
+                'rag': ['retrieval augmented generation', 'retrieval-augmented generation'],
+                'nlp': ['natural language processing'],
+                'ml': ['machine learning'],
+                'power bi': ['powerbi', 'pbi', 'power bi desktop'],
+                'sql server': ['mssql', 'microsoft sql server'],
+                'ssrs': ['sql server reporting services'],
+                'ssis': ['sql server integration services'],
+                'ssas': ['sql server analysis services'],
+                'etl': ['extract transform load'],
+                'bi': ['business intelligence'],
+                'data warehouse': ['data warehousing', 'dwh'],
+                'cosmos db': ['cosmosdb'],
+                'dynamodb': ['dynamo db'],
+                'bigquery': ['big query'],
+                't-sql': ['tsql', 'transact-sql', 'transact sql'],
+                'pl/sql': ['plsql', 'pl-sql'],
+                'stored procedures': ['stored procedure', 'sproc', 'sprocs'],
+                'chromadb': ['chroma db', 'chroma'],
+                'vector store': ['vector db', 'vector storage', 'vectorstore'],
+                'vector database': ['vector db', 'vectordb', 'vector databases'],
+                'embeddings': ['embedding', 'text embeddings', 'word embeddings', 'sentence embeddings'],
+                'vector search': ['vector similarity', 'semantic search', 'similarity search'],
+                'crystal reports': ['crystal report', 'sap crystal reports', 'crystal'],
+                'data pipeline': ['data pipelines', 'etl pipeline', 'data integration'],
+                'databricks': ['databricks spark', 'databricks notebook'],
+                'synapse analytics': ['azure synapse', 'synapse', 'azure synapse analytics'],
+                'jetpack compose': ['jetpack', 'compose'],
+                'swiftui': ['swift ui'],
+                'android studio': ['android ide'],
+                'react native': ['reactnative', 'rn']
+            }
         
         for canonical, variants in variations.items():
             if (skill1 == canonical and skill2 in variants) or \

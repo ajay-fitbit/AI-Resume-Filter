@@ -126,11 +126,39 @@ Intelligent resume querying system:
 - Top matched skills display
 - Side-by-side JD comparison
 
-### F. Advanced Features
+### F. Admin Configuration System
+
+**Database-Driven Configuration:**
+- **Categories Management**: Add/edit skill categories with emoji icons and colors
+- **Skills Management**: 200+ pre-populated skills with variations
+  - Category filtering and dual search
+  - Variations for alternate names (k8s→Kubernetes, js→JavaScript)
+- **Role Profiles**: 12 pre-configured roles (Full Stack, DevOps, Data Scientist, etc.)
+- **Role-Skill Mapping**: Visual interface for mapping skills to roles
+- **Dual-Mode System**: Database-first with hardcoded fallback
+- **Safe Data Migration**: INSERT IGNORE scripts for re-runnable setup
+- **Compact UI**: One-line listings with inline status badges
+- **Real-time Updates**: Changes take effect immediately
+
+**Admin Panel Features:**
+- Edit functionality for all entities (categories, skills, roles)
+- Toggle active/inactive status
+- Icon dropdown selector (12 pre-defined emojis)
+- Color picker for categories
+- Category and search filters working together
+- Filter persistence across operations
+- Professional modal dialogs
+- Confirmation prompts for destructive actions
+
+**Access:** http://localhost:5000/admin/config
+
+### G. Advanced Features
 
 - **Multi-Agent Architecture:** Orchestrator coordinates specialized agents (skills, semantic, red flags, RAG)
 - **Responsive Design:** Mobile-optimized views for all pages
 - **Batch Processing:** Handle multiple resume uploads simultaneously
 - **Database Persistence:** MySQL storage with candidates, resume_data, red_flags, job_descriptions, analysis_results tables
+- **Normalized Schema**: skill_categories, skills, skill_variations, role_profiles, role_skills tables
 - **Error Handling:** Resume text validation, duplicate detection, graceful fallbacks
 - **Export Capabilities:** Download individual resumes or full analysis reports
+- **Configuration Management**: Web-based admin panel for managing skills and roles

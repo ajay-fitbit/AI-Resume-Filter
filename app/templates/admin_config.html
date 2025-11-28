@@ -1,0 +1,1013 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Configuration{% endblock %}
+
+{% block content %}
+<div style="max-width: 1400px; margin: 0 auto; padding: 2rem;">
+    <h1 style="color: #1a202c; margin-bottom: 1rem; font-size: 2rem; font-weight: 700;">
+        🛠️ Admin Configuration
+    </h1>
+    
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
+        <span style="font-size: 1.5rem;">ℹ️</span>
+        <div>
+            <strong style="font-size: 1.1rem;">Dual-Mode System</strong>
+            <p style="margin: 0.25rem 0 0 0; opacity: 0.95; font-size: 0.9rem;">
+                The application currently uses <strong>hardcoded values</strong> but will check the database first. 
+                Once you populate this admin panel, the system will automatically use database values. 
+                No restart needed!
+            </p>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div style="display: flex; gap: 0.25rem; margin-bottom: 0; position: relative;">
+        <button onclick="showTab('categories')" id="tab-categories" class="tab-btn">
+            📂 Categories
+        </button>
+        <button onclick="showTab('skills')" id="tab-skills" class="tab-btn active">
+            Skills Management
+        </button>
+        <button onclick="showTab('roles')" id="tab-roles" class="tab-btn">
+            Role Profiles
+        </button>
+        <button onclick="showTab('mapping')" id="tab-mapping" class="tab-btn">
+            Role-Skill Mapping
+        </button>
+    </div>
+    
+    <!-- Tab separator line -->
+    <div style="height: 2px; background: linear-gradient(to right, #e2e8f0 0%, #cbd5e0 50%, #e2e8f0 100%); margin-bottom: 2rem;"></div>
+
+    <!-- Categories Management Tab -->
+    <div id="categories-tab" class="tab-content" style="display: none;">
+        <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+            <h2 style="color: #2d3748; margin-bottom: 1.5rem; font-size: 1.5rem;">Add New Category</h2>
+            <form id="add-category-form" style="display: grid; grid-template-columns: 1.5fr 2fr 2fr 80px 100px; gap: 1rem; align-items: end;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Category Name</label>
+                    <input type="text" id="category-name" required style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Description</label>
+                    <input type="text" id="category-description" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Icon</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <select id="category-icon-select" onchange="document.getElementById('category-icon').value = this.value" style="width: 50%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                            <option value="">Select...</option>
+                            <option value="💻">💻 Tech</option>
+                            <option value="🎨">🎨 Design</option>
+                            <option value="📊">📊 Data</option>
+                            <option value="🔧">🔧 Tools</option>
+                            <option value="🌐">🌐 Web</option>
+                            <option value="📱">📱 Mobile</option>
+                            <option value="☁️">☁️ Cloud</option>
+                            <option value="🗄️">🗄️ Database</option>
+                            <option value="🤖">🤖 AI/ML</option>
+                            <option value="🔒">🔒 Security</option>
+                            <option value="📝">📝 Docs</option>
+                            <option value="⚙️">⚙️ Config</option>
+                        </select>
+                        <input type="text" id="category-icon" placeholder="🔧" maxlength="10" style="width: 50%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem; text-align: center;">
+                    </div>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Color</label>
+                    <input type="color" id="category-color" value="#667eea" style="width: 100%; height: 48px; border: 1px solid #cbd5e0; border-radius: 8px; cursor: pointer;">
+                </div>
+                <button type="submit" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                    Add Category
+                </button>
+            </form>
+        </div>
+        
+        <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <h2 style="color: #2d3748; margin-bottom: 1.5rem; font-size: 1.5rem;">All Categories</h2>
+            <div id="categories-list"></div>
+        </div>
+    </div>
+    
+    <!-- Edit Category Modal -->
+    <div id="edit-category-modal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="color: #2d3748; margin: 0;">Edit Category</h2>
+                <button onclick="closeModal('edit-category-modal')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #718096;">&times;</button>
+            </div>
+            <form id="edit-category-form">
+                <input type="hidden" id="edit-category-id">
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Category Name</label>
+                    <input type="text" id="edit-category-name" required style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Description</label>
+                    <input type="text" id="edit-category-description" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Icon</label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <select id="edit-category-icon-select" onchange="document.getElementById('edit-category-icon').value = this.value" style="width: 50%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                                <option value="">Select...</option>
+                                <option value="💻">💻 Tech</option>
+                                <option value="🎨">🎨 Design</option>
+                                <option value="📊">📊 Data</option>
+                                <option value="🔧">🔧 Tools</option>
+                                <option value="🌐">🌐 Web</option>
+                                <option value="📱">📱 Mobile</option>
+                                <option value="☁️">☁️ Cloud</option>
+                                <option value="🗄️">🗄️ Database</option>
+                                <option value="🤖">🤖 AI/ML</option>
+                                <option value="🔒">🔒 Security</option>
+                                <option value="📝">📝 Docs</option>
+                                <option value="⚙️">⚙️ Config</option>
+                            </select>
+                            <input type="text" id="edit-category-icon" maxlength="10" style="width: 50%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem; text-align: center;">
+                        </div>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Color</label>
+                        <input type="color" id="edit-category-color" style="width: 100%; height: 48px; border: 1px solid #cbd5e0; border-radius: 8px; cursor: pointer;">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <button type="button" onclick="closeModal('edit-category-modal')" style="padding: 0.75rem 1.5rem; background: #e2e8f0; color: #4a5568; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Cancel</button>
+                    <button type="submit" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Skills Management Tab -->
+    <div id="skills-tab" class="tab-content">
+        <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+            <h2 style="color: #2d3748; margin-bottom: 1.5rem; font-size: 1.5rem;">Add New Skill</h2>
+            <form id="add-skill-form" style="display: grid; grid-template-columns: 2fr 1fr 3fr 100px; gap: 1rem; align-items: end;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Skill Name</label>
+                    <input type="text" id="skill-name" required style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Category</label>
+                    <select id="skill-category" required style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                        <option value="">Select...</option>
+                        <!-- Categories loaded dynamically -->
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Variations (comma-separated)</label>
+                    <input type="text" id="skill-variations" placeholder="e.g., js, nodejs" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                </div>
+                <button type="submit" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: transform 0.2s;">
+                    Add Skill
+                </button>
+            </form>
+        </div>
+
+        <!-- Skills List -->
+        <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; gap: 1rem;">
+                <h2 style="color: #2d3748; font-size: 1.5rem;">All Skills</h2>
+                <div style="display: flex; gap: 0.5rem;">
+                    <select id="skill-filter-category" style="padding: 0.5rem 1rem; border: 1px solid #cbd5e0; border-radius: 8px;" onchange="filterSkills()">
+                        <option value="">All Categories</option>
+                        <!-- Categories loaded dynamically -->
+                    </select>
+                    <input type="text" id="skill-search" placeholder="Search skills..." style="padding: 0.5rem 1rem; border: 1px solid #cbd5e0; border-radius: 8px; width: 250px;" onkeyup="filterSkills()">
+                </div>
+            </div>
+            <div id="skills-list" style="overflow-x: auto;">
+                <!-- Skills will be loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Skill Modal -->
+    <div id="edit-skill-modal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="color: #2d3748; margin: 0;">Edit Skill</h2>
+                <button onclick="closeModal('edit-skill-modal')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #718096;">&times;</button>
+            </div>
+            <form id="edit-skill-form">
+                <input type="hidden" id="edit-skill-id">
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Skill Name</label>
+                    <input type="text" id="edit-skill-name" required style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Category</label>
+                    <select id="edit-skill-category" required style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                        <!-- Categories loaded dynamically -->
+                    </select>
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Variations (comma-separated)</label>
+                    <input type="text" id="edit-skill-variations" placeholder="e.g., js, nodejs" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                </div>
+                <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <button type="button" onclick="closeModal('edit-skill-modal')" style="padding: 0.75rem 1.5rem; background: #e2e8f0; color: #4a5568; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Cancel</button>
+                    <button type="submit" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Role Profiles Tab -->
+    <div id="roles-tab" class="tab-content" style="display: none;">
+        <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+            <h2 style="color: #2d3748; margin-bottom: 1.5rem; font-size: 1.5rem;">Add New Role Profile</h2>
+            <form id="add-role-form" style="display: grid; grid-template-columns: 2fr 3fr 100px; gap: 1rem; align-items: end;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Role Name</label>
+                    <input type="text" id="role-name" required style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Description</label>
+                    <input type="text" id="role-description" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                </div>
+                <button type="submit" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                    Add Role
+                </button>
+            </form>
+        </div>
+
+        <!-- Roles List -->
+        <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <h2 style="color: #2d3748; margin-bottom: 1rem; font-size: 1.5rem;">All Role Profiles</h2>
+            <div id="roles-list">
+                <!-- Roles will be loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Role Modal -->
+    <div id="edit-role-modal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="color: #2d3748; margin: 0;">Edit Role Profile</h2>
+                <button onclick="closeModal('edit-role-modal')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #718096;">&times;</button>
+            </div>
+            <form id="edit-role-form">
+                <input type="hidden" id="edit-role-id">
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Role Name</label>
+                    <input type="text" id="edit-role-name" required style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Description</label>
+                    <input type="text" id="edit-role-description" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                </div>
+                <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <button type="button" onclick="closeModal('edit-role-modal')" style="padding: 0.75rem 1.5rem; background: #e2e8f0; color: #4a5568; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Cancel</button>
+                    <button type="submit" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Role-Skill Mapping Tab -->
+    <div id="mapping-tab" class="tab-content" style="display: none;">
+        <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <h2 style="color: #2d3748; margin-bottom: 1.5rem; font-size: 1.5rem;">Map Skills to Roles</h2>
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Select Role</label>
+                    <select id="mapping-role" onchange="loadRoleSkills()" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem;">
+                        <option value="">Select a role...</option>
+                    </select>
+                    
+                    <div id="current-role-skills" style="margin-top: 1.5rem;">
+                        <!-- Current skills for selected role -->
+                    </div>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 600;">Add Skills</label>
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                        <select id="mapping-category-filter" style="padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; flex: 1;" onchange="filterAvailableSkills()">
+                            <option value="">All Categories</option>
+                            <!-- Categories loaded dynamically -->
+                        </select>
+                        <input type="text" id="skill-filter" placeholder="Search skills..." style="padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 8px; flex: 1;" onkeyup="filterAvailableSkills()">
+                    </div>
+                    
+                    <div id="available-skills" style="max-height: 500px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                        <!-- Available skills will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tab-btn {
+        padding: 0.875rem 1.75rem;
+        background: #e2e8f0;
+        border: none;
+        border-radius: 16px 16px 0 0;
+        color: #4a5568;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+        box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .tab-btn:hover {
+        background: #cbd5e0;
+        color: #2d3748;
+        transform: translateY(-2px);
+    }
+    
+    .tab-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 -4px 12px rgba(102, 126, 234, 0.4);
+        transform: translateY(-4px);
+        border: 2px solid white;
+    }
+    
+    .skill-row {
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .skill-row:hover {
+        background: #f7fafc;
+    }
+    
+    .skill-variation-badge {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        background: #e6fffa;
+        color: #047857;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        margin: 0.15rem;
+    }
+    
+    .role-card {
+        padding: 1.5rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        transition: all 0.3s;
+    }
+    
+    .role-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+    
+    .skill-checkbox {
+        display: flex;
+        align-items: center;
+        padding: 0.4rem 0.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    
+    .skill-checkbox:hover {
+        background: #f7fafc;
+    }
+    
+    .skill-checkbox input[type="checkbox"] {
+        margin-right: 0.5rem;
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+    
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+        animation: fadeIn 0.3s;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 2rem;
+        border: none;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 600px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        animation: slideDown 0.3s;
+    }
+    
+    @keyframes slideDown {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    .btn-danger {
+        padding: 0.5rem 1rem;
+        background: #f56565;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: background 0.2s;
+    }
+    
+    .btn-danger:hover {
+        background: #e53e3e;
+    }
+    
+    .btn-toggle {
+        padding: 0.5rem 1rem;
+        background: #edf2f7;
+        color: #4a5568;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        margin-right: 0.5rem;
+        transition: all 0.2s;
+    }
+    
+    .btn-toggle.active {
+        background: #48bb78;
+        color: white;
+    }
+</style>
+
+<script>
+    let allSkills = [];
+    let allRoles = [];
+    let allCategories = [];
+    
+    function showTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        // Show selected tab
+        document.getElementById(tabName + '-tab').style.display = 'block';
+        document.getElementById('tab-' + tabName).classList.add('active');
+        
+        // Load data for the tab
+        if (tabName === 'categories') loadCategories();
+        if (tabName === 'skills') {
+            loadCategories();
+            loadSkills();
+        }
+        if (tabName === 'roles') loadRoles();
+        if (tabName === 'mapping') {
+            loadRoles();
+            loadSkills();
+        }
+    }
+    
+    // Categories Management
+    document.getElementById('add-category-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const categoryName = document.getElementById('category-name').value;
+        const description = document.getElementById('category-description').value;
+        const icon = document.getElementById('category-icon').value;
+        const color = document.getElementById('category-color').value;
+        
+        const response = await fetch('/api/admin/categories', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({category_name: categoryName, description, icon, color})
+        });
+        
+        if (response.ok) {
+            alert('Category added successfully!');
+            document.getElementById('add-category-form').reset();
+            loadCategories();
+        } else {
+            alert('Error adding category');
+        }
+    });
+    
+    async function loadCategories() {
+        const response = await fetch('/api/admin/categories');
+        allCategories = await response.json();
+        displayCategories(allCategories);
+        updateCategoryDropdown();
+    }
+    
+    function displayCategories(categories) {
+        const html = categories.map(cat => `
+            <div style="padding: 0.4rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 0.3rem; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 1.2rem;">${cat.icon || '🔧'}</span>
+                    <span style="color: #2d3748; font-size: 0.9rem; font-weight: 600;">${cat.category_name}</span>
+                    <span style="display: inline-block; padding: 0.1rem 0.4rem; background: ${cat.color || '#6b7280'}20; color: ${cat.color || '#6b7280'}; border-radius: 4px; font-size: 0.7rem;">
+                        ${cat.skill_count || 0} skills
+                    </span>
+                    <span style="display: inline-block; padding: 0.1rem 0.4rem; background: ${cat.is_active ? '#48bb78' : '#cbd5e0'}; color: white; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
+                        ${cat.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                </div>
+                <div style="display: flex; gap: 0.4rem;">
+                    <button style="padding: 0.3rem 0.6rem; background: #4299e1; color: white; border: none; border-radius: 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer;" onclick="openEditCategoryModal(${cat.id})">Edit</button>
+                    <button class="btn-toggle ${cat.is_active ? 'active' : ''}" onclick="toggleCategoryStatus(${cat.id}, ${cat.is_active})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                        ${cat.is_active ? '✓' : '✗'}
+                    </button>
+                    <button class="btn-danger" onclick="deleteCategory(${cat.id}, '${cat.category_name}', ${cat.skill_count})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">Del</button>
+                </div>
+            </div>
+        `).join('');
+        document.getElementById('categories-list').innerHTML = html || '<p style="color: #a0aec0; text-align: center; padding: 2rem;">No categories yet</p>';
+    }
+    
+    function updateCategoryDropdown() {
+        const select = document.getElementById('skill-category');
+        select.innerHTML = '<option value="">Select...</option>' + 
+            allCategories.filter(c => c.is_active).map(c => 
+                `<option value="${c.id}">${c.icon || ''} ${c.category_name}</option>`
+            ).join('');
+        
+        // Also update the filter dropdown in Skills tab
+        const filterSelect = document.getElementById('skill-filter-category');
+        if (filterSelect) {
+            filterSelect.innerHTML = '<option value="">All Categories</option>' + 
+                allCategories.filter(c => c.is_active).map(c => 
+                    `<option value="${c.category_name}">${c.icon || ''} ${c.category_name}</option>`
+                ).join('');
+        }
+        
+        // Update the filter dropdown in Role-Skill Mapping tab
+        const mappingFilterSelect = document.getElementById('mapping-category-filter');
+        if (mappingFilterSelect) {
+            mappingFilterSelect.innerHTML = '<option value="">All Categories</option>' + 
+                allCategories.filter(c => c.is_active).map(c => 
+                    `<option value="${c.category_name}">${c.icon || ''} ${c.category_name}</option>`
+                ).join('');
+        }
+    }
+    
+    async function toggleCategoryStatus(id, currentStatus) {
+        const response = await fetch(`/api/admin/categories/${id}/toggle`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({is_active: !currentStatus})
+        });
+        
+        if (response.ok) {
+            loadCategories();
+        }
+    }
+    
+    async function deleteCategory(id, name, skillCount) {
+        if (skillCount > 0) {
+            alert(`Cannot delete "${name}" because it has ${skillCount} skills assigned to it.`);
+            return;
+        }
+        if (!confirm(`Delete category "${name}"?`)) return;
+        
+        const response = await fetch(`/api/admin/categories/${id}`, {method: 'DELETE'});
+        if (response.ok) {
+            alert('Category deleted successfully');
+            loadCategories();
+        }
+    }
+    
+    function openEditCategoryModal(id) {
+        const category = allCategories.find(c => c.id === id);
+        if (!category) return;
+        
+        document.getElementById('edit-category-id').value = category.id;
+        document.getElementById('edit-category-name').value = category.category_name;
+        document.getElementById('edit-category-description').value = category.description || '';
+        document.getElementById('edit-category-icon').value = category.icon || '';
+        document.getElementById('edit-category-color').value = category.color || '#6b7280';
+        
+        document.getElementById('edit-category-modal').style.display = 'block';
+    }
+    
+    document.getElementById('edit-category-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-category-id').value;
+        const categoryName = document.getElementById('edit-category-name').value;
+        const description = document.getElementById('edit-category-description').value;
+        const icon = document.getElementById('edit-category-icon').value;
+        const color = document.getElementById('edit-category-color').value;
+        
+        const response = await fetch(`/api/admin/categories/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({category_name: categoryName, description, icon, color})
+        });
+        
+        if (response.ok) {
+            alert('Category updated successfully!');
+            closeModal('edit-category-modal');
+            loadCategories();
+        } else {
+            alert('Error updating category');
+        }
+    });
+    
+    // Skills Management
+    document.getElementById('add-skill-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const skillName = document.getElementById('skill-name').value;
+        const categoryId = document.getElementById('skill-category').value;
+        const variations = document.getElementById('skill-variations').value;
+        
+        const response = await fetch('/api/admin/skills', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({skill_name: skillName, category_id: categoryId, variations})
+        });
+        
+        if (response.ok) {
+            alert('Skill added successfully!');
+            document.getElementById('add-skill-form').reset();
+            loadSkills();
+        } else {
+            alert('Error adding skill');
+        }
+    });
+    
+    async function loadSkills() {
+        const response = await fetch('/api/admin/skills');
+        allSkills = await response.json();
+        filterSkills(); // Use filterSkills instead of displaySkills to respect current filters
+    }
+    
+    function displaySkills(skills) {
+        const html = `
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f7fafc; border-bottom: 1px solid #e2e8f0;">
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; color: #4a5568; font-weight: 600; font-size: 0.9rem;">Skill Name</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; color: #4a5568; font-weight: 600; font-size: 0.9rem;">Category</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; color: #4a5568; font-weight: 600; font-size: 0.9rem;">Variations</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: center; color: #4a5568; font-weight: 600; font-size: 0.9rem;">Status</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: center; color: #4a5568; font-weight: 600; font-size: 0.9rem;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${skills.map(skill => {
+                            const category = allCategories.find(c => c.category_name === skill.category);
+                            return `
+                            <tr class="skill-row">
+                                <td style="padding: 0.5rem 0.75rem; font-weight: 600; color: #2d3748; font-size: 0.9rem;">${skill.skill_name}</td>
+                                <td style="padding: 0.5rem 0.75rem;">
+                                    <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.15rem 0.5rem; background: ${category?.color || '#6b7280'}20; color: ${category?.color || '#6b7280'}; border-radius: 8px; font-size: 0.8rem;">
+                                        ${category?.icon || '🔧'} ${skill.category}
+                                    </span>
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem;">
+                                    ${skill.variations ? skill.variations.split(',').map(v => 
+                                        `<span class="skill-variation-badge">${v.trim()}</span>`
+                                    ).join('') : '<span style="color: #a0aec0; font-size: 0.85rem;">No variations</span>'}
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; text-align: center;">
+                                    <button class="btn-toggle ${skill.is_active ? 'active' : ''}" onclick="toggleSkillStatus(${skill.id}, ${skill.is_active})" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;">
+                                        ${skill.is_active ? '✓' : '✗'}
+                                    </button>
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; text-align: center;">
+                                    <button style="padding: 0.35rem 0.6rem; background: #4299e1; color: white; border: none; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; margin-right: 0.35rem;" onclick="openEditSkillModal(${skill.id})">Edit</button>
+                                    <button class="btn-danger" onclick="deleteSkill(${skill.id}, '${skill.skill_name}')" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;">Delete</button>
+                                </td>
+                            </tr>
+                        `}).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        document.getElementById('skills-list').innerHTML = html;
+    }
+    
+    function filterSkills() {
+        const search = document.getElementById('skill-search').value.toLowerCase();
+        const categoryFilter = document.getElementById('skill-filter-category').value;
+        
+        const filtered = allSkills.filter(s => {
+            // Text search filter
+            const matchesSearch = !search || 
+                s.skill_name.toLowerCase().includes(search) || 
+                s.category.toLowerCase().includes(search) ||
+                (s.variations && s.variations.toLowerCase().includes(search));
+            
+            // Category filter
+            const matchesCategory = !categoryFilter || s.category === categoryFilter;
+            
+            return matchesSearch && matchesCategory;
+        });
+        
+        displaySkills(filtered);
+    }
+    
+    async function toggleSkillStatus(id, currentStatus) {
+        const response = await fetch(`/api/admin/skills/${id}/toggle`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({is_active: !currentStatus})
+        });
+        
+        if (response.ok) {
+            loadSkills();
+        }
+    }
+    
+    async function deleteSkill(id, name) {
+        if (!confirm(`Delete skill "${name}"? This will also delete all its variations.`)) return;
+        
+        const response = await fetch(`/api/admin/skills/${id}`, {method: 'DELETE'});
+        if (response.ok) {
+            alert('Skill deleted successfully');
+            loadSkills();
+        }
+    }
+    
+    function openEditSkillModal(id) {
+        const skill = allSkills.find(s => s.id === id);
+        if (!skill) return;
+        
+        document.getElementById('edit-skill-id').value = skill.id;
+        document.getElementById('edit-skill-name').value = skill.skill_name;
+        document.getElementById('edit-skill-variations').value = skill.variations || '';
+        
+        // Populate category dropdown
+        const categorySelect = document.getElementById('edit-skill-category');
+        categorySelect.innerHTML = '<option value="">Select...</option>' + 
+            allCategories.filter(c => c.is_active).map(c => 
+                `<option value="${c.id}" ${c.category_name === skill.category ? 'selected' : ''}>${c.icon || ''} ${c.category_name}</option>`
+            ).join('');
+        
+        document.getElementById('edit-skill-modal').style.display = 'block';
+    }
+    
+    document.getElementById('edit-skill-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-skill-id').value;
+        const skillName = document.getElementById('edit-skill-name').value;
+        const categoryId = document.getElementById('edit-skill-category').value;
+        const variations = document.getElementById('edit-skill-variations').value;
+        
+        const response = await fetch(`/api/admin/skills/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({skill_name: skillName, category_id: categoryId, variations})
+        });
+        
+        if (response.ok) {
+            alert('Skill updated successfully!');
+            closeModal('edit-skill-modal');
+            loadSkills();
+        } else {
+            alert('Error updating skill');
+        }
+    });
+    
+    // Role Management
+    document.getElementById('add-role-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const roleName = document.getElementById('role-name').value;
+        const description = document.getElementById('role-description').value;
+        
+        const response = await fetch('/api/admin/roles', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({role_name: roleName, description})
+        });
+        
+        if (response.ok) {
+            alert('Role added successfully!');
+            document.getElementById('add-role-form').reset();
+            loadRoles();
+        } else {
+            alert('Error adding role');
+        }
+    });
+    
+    async function loadRoles() {
+        const response = await fetch('/api/admin/roles');
+        allRoles = await response.json();
+        displayRoles(allRoles);
+        
+        // Update mapping dropdown
+        const select = document.getElementById('mapping-role');
+        select.innerHTML = '<option value="">Select a role...</option>' + 
+            allRoles.map(r => `<option value="${r.id}">${r.role_name}</option>`).join('');
+    }
+    
+    function displayRoles(roles) {
+        const html = roles.map(role => `
+            <div style="padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 0.35rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="flex: 1; display: flex; align-items: center; gap: 0.5rem;">
+                        <h3 style="color: #2d3748; margin: 0; font-size: 0.95rem; font-weight: 600;">${role.role_name}</h3>
+                        <span style="padding: 0.1rem 0.4rem; background: ${role.is_active ? '#d4edda' : '#f8d7da'}; color: ${role.is_active ? '#155724' : '#721c24'}; border-radius: 6px; font-size: 0.7rem;">
+                            ${role.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                    </div>
+                    <div style="display: flex; gap: 0.35rem;">
+                        <button style="padding: 0.35rem 0.6rem; background: #4299e1; color: white; border: none; border-radius: 5px; font-size: 0.8rem; font-weight: 600; cursor: pointer;" onclick="openEditRoleModal(${role.id})">Edit</button>
+                        <button class="btn-toggle ${role.is_active ? 'active' : ''}" onclick="toggleRoleStatus(${role.id}, ${role.is_active})" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;">
+                            ${role.is_active ? '✓' : '✗'}
+                        </button>
+                        <button class="btn-danger" onclick="deleteRole(${role.id}, '${role.role_name}')" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        document.getElementById('roles-list').innerHTML = html;
+    }
+    
+    async function toggleRoleStatus(id, currentStatus) {
+        const response = await fetch(`/api/admin/roles/${id}/toggle`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({is_active: !currentStatus})
+        });
+        
+        if (response.ok) {
+            loadRoles();
+        }
+    }
+    
+    async function deleteRole(id, name) {
+        if (!confirm(`Delete role "${name}"? This will also remove all skill mappings.`)) return;
+        
+        const response = await fetch(`/api/admin/roles/${id}`, {method: 'DELETE'});
+        if (response.ok) {
+            alert('Role deleted successfully');
+            loadRoles();
+        }
+    }
+    
+    function openEditRoleModal(id) {
+        const role = allRoles.find(r => r.id === id);
+        if (!role) return;
+        
+        document.getElementById('edit-role-id').value = role.id;
+        document.getElementById('edit-role-name').value = role.role_name;
+        document.getElementById('edit-role-description').value = role.description || '';
+        
+        document.getElementById('edit-role-modal').style.display = 'block';
+    }
+    
+    document.getElementById('edit-role-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-role-id').value;
+        const roleName = document.getElementById('edit-role-name').value;
+        const description = document.getElementById('edit-role-description').value;
+        
+        const response = await fetch(`/api/admin/roles/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({role_name: roleName, description})
+        });
+        
+        if (response.ok) {
+            alert('Role updated successfully!');
+            closeModal('edit-role-modal');
+            loadRoles();
+        } else {
+            alert('Error updating role');
+        }
+    });
+    
+    // Role-Skill Mapping
+    async function loadRoleSkills() {
+        const roleId = document.getElementById('mapping-role').value;
+        if (!roleId) {
+            document.getElementById('current-role-skills').innerHTML = '';
+            return;
+        }
+        
+        const response = await fetch(`/api/admin/roles/${roleId}/skills`);
+        const roleSkills = await response.json();
+        
+        const html = `
+            <h3 style="color: #2d3748; margin-bottom: 0.5rem; font-size: 1rem;">Current Skills</h3>
+            <div style="max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.25rem;">
+                ${roleSkills.length ? roleSkills.map(skill => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0.5rem; border-bottom: 1px solid #e2e8f0;">
+                        <span style="color: #2d3748; font-weight: 500; font-size: 0.9rem;">${skill.skill_name}</span>
+                        <button onclick="removeSkillFromRole(${roleId}, ${skill.skill_id})" style="background: #fed7d7; color: #c53030; border: none; padding: 0.25rem 0.5rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
+                            Remove
+                        </button>
+                    </div>
+                `).join('') : '<p style="color: #a0aec0; text-align: center; padding: 1rem; font-size: 0.9rem;">No skills assigned yet</p>'}
+            </div>
+        `;
+        document.getElementById('current-role-skills').innerHTML = html;
+        
+        // Update available skills
+        displayAvailableSkills(roleSkills.map(s => s.skill_id));
+    }
+    
+    function displayAvailableSkills(excludeIds = []) {
+        const availableSkills = allSkills.filter(s => !excludeIds.includes(s.id) && s.is_active);
+        const roleId = document.getElementById('mapping-role').value;
+        
+        const html = availableSkills.map(skill => `
+            <label class="skill-checkbox" data-category="${skill.category}">
+                <input type="checkbox" onchange="addSkillToRole(${roleId}, ${skill.id}, this)">
+                <div>
+                    <div style="font-weight: 600; color: #2d3748; font-size: 0.9rem;">${skill.skill_name}</div>
+                    <div style="font-size: 0.8rem; color: #718096;">${skill.category}</div>
+                </div>
+            </label>
+        `).join('');
+        
+        document.getElementById('available-skills').innerHTML = html || '<p style="color: #a0aec0; text-align: center; padding: 1rem; font-size: 0.9rem;">No available skills</p>';
+        
+        // Reapply the current filters after updating the list
+        filterAvailableSkills();
+    }
+    
+    function filterAvailableSkills() {
+        const search = document.getElementById('skill-filter').value.toLowerCase();
+        const categoryFilter = document.getElementById('mapping-category-filter').value;
+        const checkboxes = document.querySelectorAll('.skill-checkbox');
+        
+        checkboxes.forEach(cb => {
+            const text = cb.textContent.toLowerCase();
+            const category = cb.getAttribute('data-category');
+            
+            // Check both search and category filters
+            const matchesSearch = !search || text.includes(search);
+            const matchesCategory = !categoryFilter || category === categoryFilter;
+            
+            cb.style.display = (matchesSearch && matchesCategory) ? 'flex' : 'none';
+        });
+    }
+    
+    async function addSkillToRole(roleId, skillId, checkbox) {
+        if (!roleId) {
+            alert('Please select a role first');
+            checkbox.checked = false;
+            return;
+        }
+        
+        const response = await fetch('/api/admin/role-skills', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({role_id: roleId, skill_id: skillId})
+        });
+        
+        if (response.ok) {
+            loadRoleSkills();
+        } else {
+            alert('Error adding skill to role');
+            checkbox.checked = false;
+        }
+    }
+    
+    async function removeSkillFromRole(roleId, skillId) {
+        const response = await fetch(`/api/admin/role-skills/${roleId}/${skillId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            loadRoleSkills();
+        }
+    }
+    
+    // Modal helper function
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+    
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
+    }
+    
+    // Initialize
+    loadCategories();
+    loadSkills();
+</script>
+{% endblock %}

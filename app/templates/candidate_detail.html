@@ -3,16 +3,23 @@
 {% block title %}{{ candidate.name }} - AI Resume Filter{% endblock %}
 
 {% block content %}
-<h2 style="color: white; margin-bottom: 2rem;">📄 Candidate Details</h2>
+<style>
+    /* Override card padding for compact view */
+    .card {
+        padding: 1rem !important;
+        margin-bottom: 1rem !important;
+    }
+</style>
+<h2 style="color: white; margin-bottom: 1rem;">📄 Candidate Details</h2>
 
 <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: start;">
         <div>
-            <h2 style="margin-bottom: 0.5rem;">{{ candidate.name }}</h2>
-            <p style="color: #6c757d; margin-bottom: 0.5rem;">
+            <h2 style="margin-bottom: 0.3rem; font-size: 1.5rem;">{{ candidate.name }}</h2>
+            <p style="color: #6c757d; margin-bottom: 0.2rem; font-size: 0.9rem;">
                 {% if candidate.email %}📧 {{ candidate.email }}{% endif %}
             </p>
-            <p style="color: #6c757d;">
+            <p style="color: #6c757d; font-size: 0.9rem; margin: 0;">
                 {% if candidate.phone %}📞 {{ candidate.phone }}{% endif %}
             </p>
         </div>
@@ -32,43 +39,43 @@
 {% if analysis %}
 {% for result in analysis %}
 <div class="card">
-    <h3 style="margin-bottom: 1rem;">Analysis for: {{ result.job_title }}</h3>
+    <h3 style="margin-bottom: 0.75rem; font-size: 1.2rem;">Analysis for: {{ result.job_title }}</h3>
     
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-            <h4 style="color: #667eea; font-size: 2rem; margin-bottom: 0.5rem;">{{ "%.2f"|format(result.match_score) }}%</h4>
-            <p style="color: #6c757d; font-weight: 600;">Overall Match</p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem;">
+        <div style="text-align: center; padding: 0.75rem; background: #f8f9fa; border-radius: 6px;">
+            <h4 style="color: #667eea; font-size: 1.5rem; margin-bottom: 0.3rem;">{{ "%.2f"|format(result.match_score) }}%</h4>
+            <p style="color: #6c757d; font-weight: 600; font-size: 0.85rem; margin: 0;">Overall Match</p>
         </div>
         
-        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-            <h4 style="color: #667eea; font-size: 2rem; margin-bottom: 0.5rem;">{{ "%.2f"|format(result.skill_match_score) }}%</h4>
-            <p style="color: #6c757d; font-weight: 600;">Skills</p>
+        <div style="text-align: center; padding: 0.75rem; background: #f8f9fa; border-radius: 6px;">
+            <h4 style="color: #667eea; font-size: 1.5rem; margin-bottom: 0.3rem;">{{ "%.2f"|format(result.skill_match_score) }}%</h4>
+            <p style="color: #6c757d; font-weight: 600; font-size: 0.85rem; margin: 0;">Skills</p>
         </div>
         
-        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-            <h4 style="color: #28a745; font-size: 2rem; margin-bottom: 0.5rem;">{{ "%.2f"|format(result.experience_match_score) }}%</h4>
-            <p style="color: #6c757d; font-weight: 600;">Experience</p>
+        <div style="text-align: center; padding: 0.75rem; background: #f8f9fa; border-radius: 6px;">
+            <h4 style="color: #28a745; font-size: 1.5rem; margin-bottom: 0.3rem;">{{ "%.2f"|format(result.experience_match_score) }}%</h4>
+            <p style="color: #6c757d; font-weight: 600; font-size: 0.85rem; margin: 0;">Experience</p>
         </div>
         
-        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-            <h4 style="color: #ffc107; font-size: 2rem; margin-bottom: 0.5rem;">{{ "%.2f"|format(result.keyword_match_score) }}%</h4>
-            <p style="color: #6c757d; font-weight: 600;">Keywords</p>
+        <div style="text-align: center; padding: 0.75rem; background: #f8f9fa; border-radius: 6px;">
+            <h4 style="color: #ffc107; font-size: 1.5rem; margin-bottom: 0.3rem;">{{ "%.2f"|format(result.keyword_match_score) }}%</h4>
+            <p style="color: #6c757d; font-weight: 600; font-size: 0.85rem; margin: 0;">Keywords</p>
         </div>
         
-        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-            <h4 style="color: #17a2b8; font-size: 2rem; margin-bottom: 0.5rem;">{{ "%.2f"|format(result.semantic_similarity_score) }}%</h4>
-            <p style="color: #6c757d; font-weight: 600;">Semantic</p>
+        <div style="text-align: center; padding: 0.75rem; background: #f8f9fa; border-radius: 6px;">
+            <h4 style="color: #17a2b8; font-size: 1.5rem; margin-bottom: 0.3rem;">{{ "%.2f"|format(result.semantic_similarity_score) }}%</h4>
+            <p style="color: #6c757d; font-weight: 600; font-size: 0.85rem; margin: 0;">Semantic</p>
         </div>
     </div>
     
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 0.5rem;">Tier Classification</h4>
-        <h3>{{ result.tier }}</h3>
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+        <h4 style="margin-bottom: 0.3rem; font-size: 0.9rem;">Tier Classification</h4>
+        <h3 style="margin: 0; font-size: 1.3rem;">{{ result.tier }}</h3>
     </div>
     
-    <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px;">
-        <h4 style="margin-bottom: 1rem;">💡 AI Explanation</h4>
-        <p style="line-height: 1.8; color: #495057;">{{ result.explanation }}</p>
+    <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px;">
+        <h4 style="margin-bottom: 0.5rem; font-size: 1rem;">💡 AI Explanation</h4>
+        <p style="line-height: 1.5; color: #495057; font-size: 0.95rem; margin: 0;">{{ result.explanation }}</p>
     </div>
 </div>
 {% endfor %}
@@ -76,37 +83,37 @@
 
 {% if resume_data %}
 <div class="card">
-    <h3 style="margin-bottom: 1.5rem;">Resume Information</h3>
+    <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Resume Information</h3>
     
-    <div style="display: grid; gap: 1.5rem;">
+    <div style="display: grid; gap: 1rem;">
         <div>
-            <h4 style="color: #667eea; margin-bottom: 0.5rem;">💼 Experience</h4>
-            <p><strong>{{ resume_data.experience_years }} years</strong></p>
+            <h4 style="color: #667eea; margin-bottom: 0.3rem; font-size: 0.95rem;">💼 Experience</h4>
+            <p style="margin: 0; font-size: 0.9rem;"><strong>{{ resume_data.experience_years }} years</strong></p>
         </div>
         
         <div>
-            <h4 style="color: #667eea; margin-bottom: 0.5rem;">🛠️ Skills</h4>
-            <p>{{ resume_data.skills }}</p>
+            <h4 style="color: #667eea; margin-bottom: 0.3rem; font-size: 0.95rem;">🛠️ Skills</h4>
+            <p style="margin: 0; font-size: 0.9rem;">{{ resume_data.skills }}</p>
         </div>
         
         <div>
-            <h4 style="color: #667eea; margin-bottom: 0.5rem;">🎓 Education</h4>
-            <p>{{ resume_data.education }}</p>
+            <h4 style="color: #667eea; margin-bottom: 0.3rem; font-size: 0.95rem;">🎓 Education</h4>
+            <p style="margin: 0; font-size: 0.9rem;">{{ resume_data.education }}</p>
         </div>
         
         <div>
-            <h4 style="color: #667eea; margin-bottom: 0.5rem;">👔 Job Titles</h4>
-            <p>{{ resume_data.job_titles }}</p>
+            <h4 style="color: #667eea; margin-bottom: 0.3rem; font-size: 0.95rem;">👔 Job Titles</h4>
+            <p style="margin: 0; font-size: 0.9rem;">{{ resume_data.job_titles }}</p>
         </div>
         
         <div>
-            <h4 style="color: #667eea; margin-bottom: 0.5rem;">📜 Certifications</h4>
-            <p>{{ resume_data.certifications }}</p>
+            <h4 style="color: #667eea; margin-bottom: 0.3rem; font-size: 0.95rem;">📜 Certifications</h4>
+            <p style="margin: 0; font-size: 0.9rem;">{{ resume_data.certifications }}</p>
         </div>
         
         <div>
-            <h4 style="color: #667eea; margin-bottom: 0.5rem;">🚀 Projects</h4>
-            <p>{{ resume_data.projects }}</p>
+            <h4 style="color: #667eea; margin-bottom: 0.3rem; font-size: 0.95rem;">🚀 Projects</h4>
+            <p style="margin: 0; font-size: 0.9rem;">{{ resume_data.projects }}</p>
         </div>
     </div>
 </div>
@@ -114,8 +121,8 @@
 
 {% if red_flags %}
 <div class="card" style="border-left: 4px solid #dc3545;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <h3 style="color: #dc3545; margin: 0;">🚩 Red Flags Analysis</h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="color: #dc3545; margin: 0; font-size: 1.2rem;">🚩 Red Flags Analysis</h3>
         <div style="display: flex; gap: 1rem;">
             <div style="text-align: center;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #dc3545;">
@@ -138,51 +145,51 @@
         </div>
     </div>
     
-    <div style="background: #fff3cd; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 3px solid #ffc107;">
-        <strong style="color: #856404;">⚠️ Review Carefully:</strong>
-        <span style="color: #856404;">
+    <div style="background: #fff3cd; padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; border-left: 3px solid #ffc107;">
+        <strong style="color: #856404; font-size: 0.9rem;">⚠️ Review Carefully:</strong>
+        <span style="color: #856404; font-size: 0.9rem;">
             These red flags have been automatically detected by our AI system. Please review each flag in the context of the role requirements.
         </span>
     </div>
     
-    <div style="display: grid; gap: 1.5rem;">
+    <div style="display: grid; gap: 1rem;">
         {% for flag in red_flags %}
-        <div style="background: white; border: 2px solid {% if flag.severity == 'High' %}#dc3545{% elif flag.severity == 'Medium' %}#ffc107{% else %}#6c757d{% endif %}; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <div style="background: white; border: 2px solid {% if flag.severity == 'High' %}#dc3545{% elif flag.severity == 'Medium' %}#ffc107{% else %}#6c757d{% endif %}; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
             <!-- Header -->
-            <div style="background: {% if flag.severity == 'High' %}linear-gradient(135deg, #dc3545 0%, #c82333 100%){% elif flag.severity == 'Medium' %}linear-gradient(135deg, #ffc107 0%, #e0a800 100%){% else %}linear-gradient(135deg, #6c757d 0%, #5a6268 100%){% endif %}; color: white; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <span style="font-size: 1.5rem;">
+            <div style="background: {% if flag.severity == 'High' %}linear-gradient(135deg, #dc3545 0%, #c82333 100%){% elif flag.severity == 'Medium' %}linear-gradient(135deg, #ffc107 0%, #e0a800 100%){% else %}linear-gradient(135deg, #6c757d 0%, #5a6268 100%){% endif %}; color: white; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 1.2rem;">
                         {% if flag.severity == 'High' %}🚨{% elif flag.severity == 'Medium' %}⚠️{% else %}ℹ️{% endif %}
                     </span>
                     <div>
-                        <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.25rem;">
+                        <div style="font-size: 0.95rem; font-weight: bold; margin-bottom: 0.2rem;">
                             {{ flag.flag_type }}
                         </div>
-                        <div style="font-size: 0.85rem; opacity: 0.9;">
+                        <div style="font-size: 0.75rem; opacity: 0.9;">
                             Detected: {{ flag.created_at.strftime('%B %d, %Y at %I:%M %p') if flag.created_at else 'N/A' }}
                         </div>
                     </div>
                 </div>
-                <span style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 20px; font-weight: bold; font-size: 0.9rem;">
+                <span style="background: rgba(255,255,255,0.2); padding: 0.35rem 0.75rem; border-radius: 15px; font-weight: bold; font-size: 0.8rem;">
                     {{ flag.severity }} Severity
                 </span>
             </div>
             
             <!-- Content -->
-            <div style="padding: 1.5rem;">
-                <div style="margin-bottom: 1rem;">
-                    <h4 style="color: #2d3748; font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+            <div style="padding: 1rem;">
+                <div style="margin-bottom: 0.75rem;">
+                    <h4 style="color: #2d3748; font-size: 0.8rem; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.5px;">
                         📝 Description
                     </h4>
-                    <p style="color: #495057; line-height: 1.7; margin: 0; font-size: 1rem;">
+                    <p style="color: #495057; line-height: 1.5; margin: 0; font-size: 0.9rem;">
                         {{ flag.description }}
                     </p>
                 </div>
                 
                 {% if flag.severity == 'High' %}
-                <div style="background: #fff3cd; border-left: 3px solid #ffc107; padding: 1rem; border-radius: 6px;">
-                    <strong style="color: #856404; font-size: 0.9rem;">💡 Recommendation:</strong>
-                    <p style="color: #856404; margin: 0.5rem 0 0 0; font-size: 0.9rem; line-height: 1.5;">
+                <div style="background: #fff3cd; border-left: 3px solid #ffc107; padding: 0.75rem; border-radius: 6px;">
+                    <strong style="color: #856404; font-size: 0.85rem;">💡 Recommendation:</strong>
+                    <p style="color: #856404; margin: 0.4rem 0 0 0; font-size: 0.85rem; line-height: 1.4;">
                         {% if 'Job Hopping' in flag.flag_type or 'Frequent' in flag.flag_type %}
                         Consider discussing career stability and long-term commitment during the interview. Ask about reasons for job changes and future career goals.
                         {% elif 'Gap' in flag.flag_type %}
@@ -200,8 +207,8 @@
             </div>
             
             <!-- Footer -->
-            <div style="background: #f8f9fa; padding: 0.75rem 1.5rem; border-top: 1px solid #e9ecef; display: flex; justify-content: space-between; align-items: center;">
-                <div style="font-size: 0.85rem; color: #6c757d;">
+            <div style="background: #f8f9fa; padding: 0.5rem 1rem; border-top: 1px solid #e9ecef; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 0.8rem; color: #6c757d;">
                     <span style="margin-right: 1rem;">
                         🤖 <strong>Detection Method:</strong> AI Multi-Agent Analysis
                     </span>
@@ -219,16 +226,16 @@
     </div>
     
     <!-- Summary Footer -->
-    <div style="margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 8px;">
-        <h4 style="color: #2d3748; margin-bottom: 1rem;">📊 Red Flags Summary</h4>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+    <div style="margin-top: 1.5rem; padding: 1rem; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 6px;">
+        <h4 style="color: #2d3748; margin-bottom: 0.75rem; font-size: 1rem;">📊 Red Flags Summary</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
             <div>
-                <strong style="color: #6c757d; font-size: 0.9rem;">Total Flags:</strong>
-                <div style="font-size: 1.3rem; font-weight: bold; color: #2d3748;">{{ red_flags | length }}</div>
+                <strong style="color: #6c757d; font-size: 0.85rem;">Total Flags:</strong>
+                <div style="font-size: 1.1rem; font-weight: bold; color: #2d3748;">{{ red_flags | length }}</div>
             </div>
             <div>
-                <strong style="color: #6c757d; font-size: 0.9rem;">Risk Level:</strong>
-                <div style="font-size: 1.3rem; font-weight: bold;">
+                <strong style="color: #6c757d; font-size: 0.85rem;">Risk Level:</strong>
+                <div style="font-size: 1.1rem; font-weight: bold;">
                     {% if red_flags | selectattr('severity', 'equalto', 'High') | list | length > 0 %}
                         <span style="color: #dc3545;">High Risk ⚠️</span>
                     {% elif red_flags | selectattr('severity', 'equalto', 'Medium') | list | length > 0 %}
@@ -239,8 +246,8 @@
                 </div>
             </div>
             <div>
-                <strong style="color: #6c757d; font-size: 0.9rem;">Action Required:</strong>
-                <div style="font-size: 1.3rem; font-weight: bold;">
+                <strong style="color: #6c757d; font-size: 0.85rem;">Action Required:</strong>
+                <div style="font-size: 1.1rem; font-weight: bold;">
                     {% if red_flags | selectattr('severity', 'equalto', 'High') | list | length > 0 %}
                         <span style="color: #dc3545;">Review Before Interview</span>
                     {% else %}
@@ -253,16 +260,16 @@
 </div>
 {% else %}
 <div class="card" style="background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border-left: 4px solid #28a745;">
-    <div style="text-align: center; padding: 2rem;">
-        <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
-        <h3 style="color: #28a745; margin-bottom: 1rem;">No Red Flags Detected</h3>
-        <p style="color: #155724; font-size: 1.1rem; line-height: 1.6; margin-bottom: 1.5rem;">
+    <div style="text-align: center; padding: 1.5rem;">
+        <div style="font-size: 3rem; margin-bottom: 0.75rem;">✅</div>
+        <h3 style="color: #28a745; margin-bottom: 0.75rem; font-size: 1.3rem;">No Red Flags Detected</h3>
+        <p style="color: #155724; font-size: 1rem; line-height: 1.5; margin-bottom: 1rem;">
             This candidate has a clean profile with no detected red flags. Our AI multi-agent system has thoroughly analyzed the resume and found no concerning patterns.
         </p>
-        <div style="background: white; padding: 1rem; border-radius: 8px; display: inline-block;">
-            <div style="display: flex; gap: 2rem; align-items: center;">
+        <div style="background: white; padding: 0.75rem; border-radius: 6px; display: inline-block;">
+            <div style="display: flex; gap: 1.5rem; align-items: center;">
                 <div>
-                    <div style="font-size: 0.85rem; color: #6c757d; margin-bottom: 0.25rem;">Job Hopping</div>
+                    <div style="font-size: 0.8rem; color: #6c757d; margin-bottom: 0.2rem;">Job Hopping</div>
                     <div style="font-weight: bold; color: #28a745;">✓ Clear</div>
                 </div>
                 <div>

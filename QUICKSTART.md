@@ -43,6 +43,10 @@ Get-Content database_schema.sql | mysql -u root -p resume_filter_db
 # Apply CASCADE DELETE constraints
 .\venv\Scripts\python.exe force_cascade_fix.py
 
+# Setup Admin Configuration System (Optional but Recommended)
+Get-Content database_admin_tables.sql | mysql -u root -p resume_filter_db
+Get-Content insert_hardcoded_data.sql | mysql -u root -p resume_filter_db
+
 # Start the application
 .\venv\Scripts\python.exe app.py
 ```
@@ -75,10 +79,19 @@ net start MySQL
 - ✅ **Fixed career gap detection**: Resume text validation, merged overlapping periods
 - ✅ Separated job creation from resume upload workflow
 - ✅ All scores display 2 decimal places
-- ✅ **Expanded skills database**: 100+ skills including databases, BI tools, SQL languages
+- ✅ **Expanded skills database**: 200+ skills with 70+ variations across 10 categories
 - ✅ **RAG agent enhancements**: Role-based skill mapping for 10+ job categories
 - ✅ **Bulk upload mode**: AI role profiling without job descriptions
 - ✅ **Dashboard enhancements**: Candidate profile cards with stats and quick access
+- ✅ **Admin Configuration System**: Web-based management for skills, categories, and roles
+- ✅ **Normalized Schema**: skill_categories table with proper foreign keys
+- ✅ **Edit Functionality**: Update categories, skills, and roles via modal dialogs
+- ✅ **Category Filters**: Dual filtering (category + search) in Skills and Mapping tabs
+- ✅ **Compact UI**: One-line listings with inline status badges
+- ✅ **Icon Dropdowns**: 12 pre-defined emoji icons for categories
+- ✅ **Safe Data Migration**: INSERT IGNORE scripts for re-runnable setup
+- ✅ **Filter Persistence**: Filters maintained after adding/mapping operations
+- ✅ **Bug Fixes**: Skill variations saving, category filter resetting, CSS alignment
 - ✅ **Expandable skills UI**: Clickable "+X more" badges in bulk analysis
 - ✅ **Chatbot improvements**: Resume count display, enhanced query understanding
 
@@ -103,6 +116,14 @@ net start MySQL
   - **Expand All / Collapse All buttons**: Bulk control for all candidates
   - Expandable skills badges (click "+X more")
   - View on dedicated Bulk Analysis page or dashboard cards
+- **Admin Configuration** 🆕: Manage skills, categories, and roles
+  - Access: http://localhost:5000/admin/config
+  - Add/edit categories with emoji icon dropdown
+  - Manage 200+ skills with variations
+  - Configure role profiles and skill mappings
+  - Category filtering with dual search
+  - Compact one-line listings
+  - Changes take effect immediately
 - **AI Chatbot (RAG)** 🆕: Ask natural language questions like:
   - "Who is good fit for database roles?"
   - "Find DevOps candidates"
@@ -112,6 +133,39 @@ net start MySQL
 - **All Jobs**: Manage job postings and view statistics
 - **Agent Monitoring**: View multi-agent system execution logs
 - **Delete Options**: Remove jobs or candidates (with CASCADE delete of related data)
+
+## Admin Configuration Quick Reference
+
+**Access Admin Panel**: http://localhost:5000/admin/config
+
+**Categories Tab:**
+- Add categories with 12 emoji icon options (💻🎨📊🔧🌐📱☁️🗄️🤖🔒📝⚙️)
+- Set colors with color picker
+- Edit/toggle/delete existing categories
+
+**Skills Tab:**
+- Add skills with category selection
+- Add variations (comma-separated): js, javascript, JS
+- Filter by category dropdown
+- Search by skill name
+- Dual filtering (both work together)
+
+**Roles Tab:**
+- Add/edit role profiles
+- Toggle active/inactive status
+- Manage 12 pre-configured roles
+
+**Role-Skill Mapping Tab:**
+- Select role from dropdown
+- Filter skills by category
+- Search for specific skills
+- Check boxes to map skills to role
+- Filters persist after mapping
+
+**Documentation:**
+- `ADMIN_SYSTEM_SUMMARY.md` - Complete overview
+- `EDIT_FUNCTIONALITY_GUIDE.md` - Edit features and bug fixes
+- `insert_hardcoded_data.sql` - Data population script (safe to re-run)
 
 ---
 

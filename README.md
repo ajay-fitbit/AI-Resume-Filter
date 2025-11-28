@@ -104,10 +104,20 @@ Ensure all project files are in: `C:\Users\Ajay\Downloads\AI Resume Filter`
    python force_cascade_fix.py
    ```
 
+4. **Set up Admin Configuration System** (Optional but Recommended):
+   ```powershell
+   # Create admin tables (categories, skills, roles)
+   Get-Content database_admin_tables.sql | mysql -u root -p
+   
+   # Populate with 200+ skills, 70+ variations, 12 roles
+   Get-Content insert_hardcoded_data.sql | mysql -u root -p
+   ```
+
 This will:
 - Create the database with UTF8MB4 encoding
-- Set up all 5 required tables (InnoDB engine)
+- Set up all required tables (InnoDB engine)
 - Configure CASCADE DELETE relationships for data integrity
+- Populate admin configuration with skills, categories, and role profiles
 
 ### 6. Run the Application
 
@@ -163,7 +173,32 @@ The application will start on: **http://localhost:5000**
 - **Download Resume**: Click green download button to get original resume file
 - Delete candidates using the red "Delete" button
 
-### 6. Chat with AI Assistant (RAG System) 🆕
+### 6. Admin Configuration (Manage Skills & Roles) 🆕
+- Click **"⚙️ Admin"** in the navigation to access the configuration panel
+- **Categories Management**:
+  - Add/edit skill categories with emoji icons (dropdown selector)
+  - Set category colors with color picker
+  - Compact one-line listing with inline status
+- **Skills Management**:
+  - Add/edit 200+ pre-populated skills
+  - Add skill variations (k8s→Kubernetes, js→JavaScript)
+  - Filter by category and search
+  - Dual filtering (category + text)
+- **Role Profiles**:
+  - Manage 12 pre-configured roles
+  - Add custom roles for your organization
+  - Edit descriptions and toggle status
+- **Role-Skill Mapping**:
+  - Visual checkbox interface for mapping
+  - Category and search filters
+  - Filter persistence after operations
+- **Benefits**:
+  - No code modification required
+  - Changes take effect immediately
+  - Database-first with hardcoded fallback
+  - Safe data population with INSERT IGNORE scripts
+
+### 7. Chat with AI Assistant (RAG System) 🆕
 - Click **"💬 Resume Q&A"** in the navigation to access the AI chatbot
 - Ask questions in natural language:
   - "Who is good fit for database roles?"
