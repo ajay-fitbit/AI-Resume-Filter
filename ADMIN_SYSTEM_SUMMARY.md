@@ -108,9 +108,6 @@
 - `clear_cache()` - Refresh cached data
 - Includes fallback data if database is empty
 
-### 5. Documentation
-- `ADMIN_SETUP_GUIDE.md` - Complete setup and usage instructions
-
 ## How It Works
 
 ### Current Workflow (Before):

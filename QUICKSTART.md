@@ -68,33 +68,6 @@ net start MySQL
 
 💡 **All commands use the virtual environment** (.\venv\Scripts\python.exe)
 
-🔧 **Recent Fixes Applied**:
-- ✅ Added `__init__.py` to make app directory a Python package
-- ✅ Upgraded sentence-transformers to v5.1.2 for compatibility
-- ✅ Fixed import paths in database.py
-- ✅ Database encoding set to UTF8MB4 for emoji support
-- ✅ **DATABASE ENGINE: Converted MyISAM → InnoDB for foreign key support**
-- ✅ CASCADE DELETE constraints for data integrity (removes related records)
-- ✅ Enhanced experience calculation (supports "20 years of IT experience")
-- ✅ **Fixed career gap detection**: Resume text validation, merged overlapping periods
-- ✅ Separated job creation from resume upload workflow
-- ✅ All scores display 2 decimal places
-- ✅ **Expanded skills database**: 200+ skills with 70+ variations across 10 categories
-- ✅ **RAG agent enhancements**: Role-based skill mapping for 10+ job categories
-- ✅ **Bulk upload mode**: AI role profiling without job descriptions
-- ✅ **Dashboard enhancements**: Candidate profile cards with stats and quick access
-- ✅ **Admin Configuration System**: Web-based management for skills, categories, and roles
-- ✅ **Normalized Schema**: skill_categories table with proper foreign keys
-- ✅ **Edit Functionality**: Update categories, skills, and roles via modal dialogs
-- ✅ **Category Filters**: Dual filtering (category + search) in Skills and Mapping tabs
-- ✅ **Compact UI**: One-line listings with inline status badges
-- ✅ **Icon Dropdowns**: 12 pre-defined emoji icons for categories
-- ✅ **Safe Data Migration**: INSERT IGNORE scripts for re-runnable setup
-- ✅ **Filter Persistence**: Filters maintained after adding/mapping operations
-- ✅ **Bug Fixes**: Skill variations saving, category filter resetting, CSS alignment
-- ✅ **Expandable skills UI**: Clickable "+X more" badges in bulk analysis
-- ✅ **Chatbot improvements**: Resume count display, enhanced query understanding
-
 ## First Use
 
 1. Make sure Flask is running (you'll see "Running on http://127.0.0.1:5000")
