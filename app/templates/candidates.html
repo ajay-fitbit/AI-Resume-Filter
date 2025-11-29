@@ -58,6 +58,7 @@ function toggleJD() {
             <tr>
                 <th>Rank</th>
                 <th>Candidate</th>
+                <th>Job Title</th>
                 <th>Skills Match</th>
                 <th>Experience Match</th>
                 <th>Overall Score</th>
@@ -73,6 +74,9 @@ function toggleJD() {
                 <td>
                     <strong>{{ candidate.name }}</strong><br>
                     <small style="color: #6c757d;">{{ candidate.email or 'No email' }}</small>
+                </td>
+                <td>
+                    <small style="color: #4a5568;">{{ candidate.job_titles[:50] if candidate.job_titles else 'N/A' }}{% if candidate.job_titles and candidate.job_titles|length > 50 %}...{% endif %}</small>
                 </td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -109,16 +113,16 @@ function toggleJD() {
                         <span style="color: #28a745;">✓ Clean</span>
                     {% endif %}
                 </td>
-                <td style="white-space: nowrap;">
-                    <a href="{{ url_for('candidate_detail', candidate_id=candidate.id) }}" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem; margin-right: 0.5rem; min-width: 90px; text-align: center;">
-                        View
+                <td style="white-space: nowrap; width: 1%; padding: 0.5rem 0.75rem;">
+                    <a href="{{ url_for('candidate_detail', candidate_id=candidate.id) }}" style="padding: 0.3rem; font-size: 1.2rem; margin-right: 0.3rem; text-decoration: none; cursor: pointer; display: inline-block;" title="View Details">
+                        👤
                     </a>
-                    <a href="{{ url_for('download_resume', candidate_id=candidate.id) }}" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #28a745; color: white; border: none; border-radius: 8px; text-decoration: none; margin-right: 0.5rem; min-width: 120px; text-align: center;">
-                        📥 Download
+                    <a href="{{ url_for('download_resume', candidate_id=candidate.id) }}" style="padding: 0.3rem; font-size: 1.2rem; margin-right: 0.3rem; text-decoration: none; cursor: pointer; display: inline-block;" title="Download Resume">
+                        ⬇️
                     </a>
                     <form method="POST" action="{{ url_for('delete_candidate', candidate_id=candidate.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete {{ candidate.name }}? This will remove all their data including resume and analysis results.');">
-                        <button type="submit" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; min-width: 90px; display: inline-block; line-height: 1.5; vertical-align: middle;">
-                            Delete
+                        <button type="submit" style="padding: 0.3rem; font-size: 1.2rem; background: none; border: none; cursor: pointer; display: inline-block;" title="Delete Candidate">
+                            ❌
                         </button>
                     </form>
                 </td>

@@ -238,10 +238,10 @@ def bulk_upload():
                              candidate_data['skills'],
                              candidate_data['experience_years'],
                              candidate_data['education'], 
-                             '',  # projects
-                             '',  # certifications
-                             '',  # job_titles
-                             '')  # raw_text
+                             candidate_data.get('projects', ''),  # projects
+                             candidate_data.get('certifications', ''),  # certifications
+                             candidate_data.get('job_titles', ''),  # job_titles
+                             candidate_data.get('raw_text', ''))  # raw_text
                         )
                         
                         # Filter red flags - only save job-independent flags for bulk upload
@@ -350,10 +350,10 @@ def upload():
                          candidate_data['skills'],  # Already a comma-separated string from parser
                          candidate_data['experience_years'],
                          candidate_data['education'], 
-                         '',  # projects
-                         '',  # certifications
-                         '',  # job_titles
-                         '')  # raw_text (stored in state but not needed here)
+                         candidate_data.get('projects', ''),  # projects
+                         candidate_data.get('certifications', ''),  # certifications
+                         candidate_data.get('job_titles', ''),  # job_titles
+                         candidate_data.get('raw_text', ''))  # raw_text (stored in state but not needed here)
                     )
                     
                     # Save analysis results
@@ -466,9 +466,11 @@ def candidates():
             SELECT c.id, c.name, c.email, c.phone, c.created_at,
                    ar.match_score, ar.tier, ar.skill_match_score, 
                    ar.experience_match_score, ar.explanation,
-                   (SELECT COUNT(*) FROM red_flags rf WHERE rf.candidate_id = c.id AND rf.severity = 'High') as high_flags
+                   (SELECT COUNT(*) FROM red_flags rf WHERE rf.candidate_id = c.id AND rf.severity = 'High') as high_flags,
+                   rd.job_titles
             FROM candidates c
             JOIN analysis_results ar ON c.id = ar.candidate_id
+            LEFT JOIN resume_data rd ON c.id = rd.candidate_id
             WHERE ar.job_description_id = %s
             ORDER BY ar.match_score DESC
         """
@@ -482,9 +484,11 @@ def candidates():
                    COALESCE(ar.skill_match_score, 0) as skill_match_score,
                    COALESCE(ar.experience_match_score, 0) as experience_match_score,
                    COALESCE(ar.explanation, 'No analysis available') as explanation,
-                   (SELECT COUNT(*) FROM red_flags rf WHERE rf.candidate_id = c.id AND rf.severity = 'High') as high_flags
+                   (SELECT COUNT(*) FROM red_flags rf WHERE rf.candidate_id = c.id AND rf.severity = 'High') as high_flags,
+                   rd.job_titles
             FROM candidates c
             LEFT JOIN analysis_results ar ON c.id = ar.candidate_id
+            LEFT JOIN resume_data rd ON c.id = rd.candidate_id
             GROUP BY c.id
             ORDER BY c.created_at DESC
         """
