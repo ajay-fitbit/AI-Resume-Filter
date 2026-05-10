@@ -1,468 +1,170 @@
-# AI Resume Filter - Multi-Agent System
-
-## 🤖 What's New: Multi-Agent Architecture
-
-This application has been upgraded to a **Multi-Agent System** where specialized AI agents work together to analyze resumes:
-
-- **Resume Parser Agent**: Extracts structured data from documents
-- **Skills Assessment Agent**: Evaluates candidate skills
-- **Semantic Matching Agent**: AI-powered similarity analysis (Transformer models)
-- **Red Flag Agent**: Detects career issues
-- **Ranking Orchestrator**: Coordinates all agents
-
-📖 **See [MULTI_AGENT_ARCHITECTURE.md](MULTI_AGENT_ARCHITECTURE.md) for detailed architecture**  
-🚀 **See [RAG_INTEGRATION_GUIDE.md](RAG_INTEGRATION_GUIDE.md) for future RAG pipeline**
-
-## 📋 Prerequisites
-
-- Python 3.8 or higher
-- MySQL Server (5.7 or higher)
-- At least 2GB RAM
-- Internet connection (for downloading AI models)
-
-## 🚀 Installation Steps
-
-### 1. Clone or Download the Project
-
-Ensure all project files are in: `C:\Users\Ajay\Downloads\AI Resume Filter`
-
-### 2. Set Up MySQL Database
-
-1. **Install MySQL** (if not already installed):
-   - Download from: https://dev.mysql.com/downloads/mysql/
-   - Run the installer and follow the setup wizard
-   - Remember the root password you set
-
-2. **Start MySQL Service**:
-   ```powershell
-   net start MySQL
-   ```
-
-3. **Create Database User** (optional but recommended):
-   ```sql
-   CREATE USER 'resume_app'@'localhost' IDENTIFIED BY 'your_secure_password';
-   GRANT ALL PRIVILEGES ON resume_filter_db.* TO 'resume_app'@'localhost';
-   FLUSH PRIVILEGES;
-   ```
-
-### 3. Configure Environment Variables
-
-1. Copy `.env.example` to `.env`:
-   ```powershell
-   Copy-Item .env.example .env
-   ```
-
-2. Edit `.env` file with your MySQL credentials:
-   ```
-   DB_HOST=localhost
-   DB_USER=root
-   DB_PASSWORD=your_mysql_password
-   DB_NAME=resume_filter_db
-   
-   FLASK_SECRET_KEY=your_random_secret_key_here
-   FLASK_ENV=development
-   ```
-
-### 4. Install Python Dependencies
-
-1. **Create Virtual Environment** (recommended):
-   ```powershell
-   python -m venv venv
-   .\venv\Scripts\Activate.ps1
-   ```
-
-2. **Upgrade pip**:
-   ```powershell
-   python -m pip install --upgrade pip
-   ```
-
-3. **Install Required Packages**:
-   ```powershell
-   pip install -r requirements.txt
-   ```
-
-4. **Download spaCy Language Model**:
-   ```powershell
-   python -m spacy download en_core_web_sm
-   ```
-
-### 5. Initialize Database
-
-1. **Create database and tables**:
-   ```powershell
-   # Load the schema into MySQL
-   Get-Content database_schema.sql | mysql -u root -p
-   ```
-
-2. **Convert tables to InnoDB** (required for foreign keys):
-   ```powershell
-   python convert_to_innodb.py
-   ```
-
-3. **Apply CASCADE DELETE constraints**:
-   ```powershell
-   python force_cascade_fix.py
-   ```
-
-4. **Set up Admin Configuration System** (Optional but Recommended):
-   ```powershell
-   # Create admin tables (categories, skills, roles)
-   Get-Content database_admin_tables.sql | mysql -u root -p
-   
-   # Populate with 200+ skills, 70+ variations, 12 roles
-   Get-Content insert_hardcoded_data.sql | mysql -u root -p
-   ```
-
-This will:
-- Create the database with UTF8MB4 encoding
-- Set up all required tables (InnoDB engine)
-- Configure CASCADE DELETE relationships for data integrity
-- Populate admin configuration with skills, categories, and role profiles
-
-### 6. Run the Application
-
-```powershell
-python app.py
-```
-
-The application will start on: **http://localhost:5000**
-
-## 📖 How to Use
-
-### 1. Access the Dashboard
-- Open your browser and go to: `http://localhost:5000`
-- You'll see the main dashboard with statistics
-
-### 2. Create Job Description
-1. Click **"Create Job"** in the navigation
-2. Enter the job title and full job description
-3. Click **"Create Job Description"**
-
-### 3. Upload Resumes (Two Modes)
-
-**Option A: Job-Based Upload**
-1. Click **"Upload Resumes"** in the navigation
-2. Select the job description from the dropdown
-3. Choose one or multiple resume files (PDF or DOCX)
-4. Click **"Process Resumes"**
-
-**Option B: Bulk Upload** 🆕
-1. Click **"Bulk Upload"** in the navigation
-2. Upload resumes without job descriptions
-3. AI automatically profiles candidates for best-fit roles:
-   - Full Stack Developer, DevOps Engineer, Data Scientist
-   - Cloud Architect, QA Engineer, Database Administrator
-   - Mobile Developer, AI/ML Engineer, Frontend/Backend Developer
-4. View comprehensive analysis with expandable skills badges
-5. Access from dashboard or dedicated Bulk Analysis page
-
-### 4. View Results
-- The system will automatically:
-  - Parse all resumes
-  - Extract candidate information
-  - Calculate match scores
-  - Detect red flags
-  - Rank candidates
-- You'll be redirected to the candidates list
-
-### 5. Review Candidates
-- See ranked candidates with scores
-- Click **"View Details"** for comprehensive analysis
-- Review skills match, experience match, and red flags
-- Read AI-generated explanations
-- **Download Resume**: Click green download button to get original resume file
-- Delete candidates using the red "Delete" button
-
-### 6. Admin Configuration (Manage Skills & Roles) 🆕
-- Click **"⚙️ Admin"** in the navigation to access the configuration panel
-- **Categories Management**:
-  - Add/edit skill categories with emoji icons (dropdown selector)
-  - Set category colors with color picker
-  - Compact one-line listing with inline status
-- **Skills Management**:
-  - Add/edit 200+ pre-populated skills
-  - Add skill variations (k8s→Kubernetes, js→JavaScript)
-  - Filter by category and search
-  - Dual filtering (category + text)
-- **Role Profiles**:
-  - Manage 12 pre-configured roles
-  - Add custom roles for your organization
-  - Edit descriptions and toggle status
-- **Role-Skill Mapping**:
-  - Visual checkbox interface for mapping
-  - Category and search filters
-  - Filter persistence after operations
-- **Benefits**:
-  - No code modification required
-  - Changes take effect immediately
-  - Database-first with hardcoded fallback
-  - Safe data population with INSERT IGNORE scripts
-
-### 7. Chat with AI Assistant (RAG System) 🆕
-- Click **"💬 Resume Q&A"** in the navigation to access the AI chatbot
-- Ask questions in natural language:
-  - "Who is good fit for database roles?"
-  - "Find DevOps candidates"
-  - "Show me data scientists with 5+ years"
-  - "List all Python and React developers"
-- Features:
-  - **AI-Powered Semantic Search** using SentenceTransformer model
-  - **Role-Based Intelligence**: Maps generic terms to relevant skills
-    * DevOps → Docker, Kubernetes, Jenkins, CI/CD, Terraform, Ansible
-    * Database → SQL, MySQL, PostgreSQL, MongoDB, Oracle
-    * Data Science → Python, R, SQL, Machine Learning, Pandas, Tableau
-    * BI → Power BI, Tableau, SQL, Excel, ETL, Data Analysis
-  - **8 Query Types**: Greetings, Help, Count, Comparison, Profile, Recommendation, Listing, Search
-  - **Chat History**: Persists across page refreshes (50 messages)
-  - **Markdown Formatting**: Clean, readable responses
-  - **Match Scores**: Shows relevance percentage (2 decimal places)
-  - **Resume Count Display**: Shows total indexed resumes and per-job counts
-  - **View Profile Button** 🆕: Click to see full candidate details with smart back navigation
-
-### 7. Monitor Multi-Agent System
-- Click **"🤖 Agents"** in the navigation to access the monitoring dashboard
-- View status of all 5 agents (Resume Parser, Skills Assessor, Semantic Matcher, Red Flag Detector)
-- See recent agent executions with timing information
-- Click **"View Logs"** on any execution to see:
-  - Agent scoring breakdown (Semantic 30%, Keywords 25%, Skills 30%, Experience 15%)
-  - Matched vs missing skills
-  - Red flags detected
-  - Extracted resume data
-
-### 8. Review Candidates with Collapsible View 🆕
-- **Bulk Analysis Page** now features:
-  - **Collapsible accordion rows**: Click any candidate row to expand/collapse full details
-  - **Expand All / Collapse All buttons**: Control all candidates at once
-  - Compact summary view: Name, experience, skills count, profile, red flags
-  - Full card view on expand: Complete profile, skills, red flags, actions
-- **Job-Based Candidates Page**:
-  - **Expandable Job Description**: Click "Show Full Description" to view complete JD
-  - Compact preview (first 200 chars) with toggle button
-
-### 8. Manage Jobs and Candidates
-- Click **"All Jobs"** to view all job postings
-- View how many candidates applied for each
-- See average match scores
-- Delete jobs using the red "Delete" button (removes all associated data)
-- Click **"All Candidates"** to view all uploaded resumes across all jobs
-- **Download Resumes**: Available on dashboard, candidates page, and chatbot results
-
-## 🎯 Features
-
-### Dashboard Enhancements 🆕
-- ✅ **Candidate Analysis Briefs**: Quick access to bulk uploaded candidates
-  - Profile cards with AI-generated role recommendations
-  - Color-coded borders (red for flags, green for senior, blue default)
-  - Skills count and red flag indicators
-  - Direct links to full profiles
-- ✅ **Bulk Analysis Page**: Comprehensive candidate profiles
-  - Expandable skills badges (click "+X more" to show all)
-  - Detailed red flag breakdowns with severity levels
-  - Desktop and mobile optimized views
-  - Quick stats and filtering options
-
-### Resume Download 🆕
-- ✅ Download original resume files from multiple locations:
-  - Dashboard (recent analyses and candidate briefs)
-  - Candidates page (desktop & mobile views)
-  - AI Chatbot results
-  - Bulk Analysis page
-- ✅ Secure file serving with proper filename format
-- ✅ Files served with original extension (.pdf, .docx, .doc)
-- ✅ Green download buttons for easy identification
-
-### AI-Powered RAG Chatbot 🆕
-- ✅ **Natural Language Queries**: Ask questions conversationally
-- ✅ **Semantic Understanding**: AI model understands context and meaning
-- ✅ **SentenceTransformer Model**: all-MiniLM-L6-v2 (384-dim embeddings)
-- ✅ **8 Query Types**: Greetings, Help, Count, Comparison, Profile, Recommendation, Listing, Search
-- ✅ **Chat History**: localStorage persistence (50 messages)
-- ✅ **Markdown Formatting**: Headers, bold, lists, code blocks
-- ✅ **Hybrid Scoring**: AI semantic (0-30pts) + keyword matching + fuzzy logic
-- ✅ **Intelligent Boosting**: Adaptive scoring based on query type
-- ✅ **Fallback Mechanism**: Uses fuzzy matching if AI unavailable
-- ✅ **Local Execution**: No API calls, fully offline
-- ✅ **Download Resumes**: Download candidate resumes directly from chat results
-
-### Resume Parsing
-- ✅ Extracts name, email, phone
-- ✅ Identifies **100+ technical skills** across categories:
-  - Programming: Python, Java, JavaScript, TypeScript, Go, Rust, Scala, R, etc.
-  - AI/ML: LLM, RAG, Machine Learning, TensorFlow, PyTorch, OpenAI, GPT, BERT
-  - Cloud/DevOps: AWS, Azure, GCP, Docker, Kubernetes, CI/CD, Terraform, Ansible
-  - Databases: PostgreSQL, MySQL, MongoDB, Oracle, MariaDB, Neo4j, InfluxDB, CouchDB, etc.
-  - SQL Languages: T-SQL, PL/SQL, Stored Procedures, Triggers, Views, Indexes
-  - BI Tools: Power BI, Tableau, QlikView, Qlik Sense, MicroStrategy, SSRS, SSIS, SSAS, DAX, Alteryx, Talend, Informatica, dbt, Airflow, etc.
-  - And many more (see full list in `app/resume_parser.py`)
-- ✅ Calculates years of experience (supports "20 years of IT experience", date ranges, etc.)
-- ✅ Extracts education, certifications, projects
-- ✅ Recognizes job titles and roles
-
-### Job Matching
-- ✅ Semantic similarity analysis (AI-powered)
-- ✅ Keyword overlap calculation
-- ✅ Skills matching percentage
-- ✅ Experience requirement matching
-- ✅ Overall match score (0-100%)
-
-### Red Flag Detection
-- ⚠️ Job hopping (average tenure < 2.5 years across 4+ jobs)
-- ⚠️ Career gaps (>1 year gaps with smart overlapping period merging)
-- ⚠️ Resume text validation (prevents false positives on empty resumes)
-- ⚠️ Missing required skills (from job description)
-- ⚠️ Irrelevant work experience (doesn't align with job)
-- ⚠️ Insufficient experience (below required years)
-- ⚠️ Severity levels (High, Medium) with detailed recommendations
-
-### Ranking System
-- 🥇 **Top Tier**: 80-100% match
-- 🥈 **Medium Tier**: 60-79% match
-- 🥉 **Low Tier**: <60% match
-
-## 🔧 Troubleshooting
-
-### Database Connection Error
-```
-Error: Can't connect to MySQL server
-```
-**Solution**:
-1. Check MySQL is running: `net start MySQL`
-2. Verify credentials in `.env` file
-3. Test connection: `mysql -u root -p`
-
-### Import Errors
-```
-ModuleNotFoundError: No module named 'flask'
-```
-**Solution**:
-1. Activate virtual environment: `.\venv\Scripts\Activate.ps1`
-2. Reinstall dependencies: `pip install -r requirements.txt`
-
-### Port Already in Use
-```
-Address already in use: Port 5000
-```
-**Solution**:
-1. Stop the conflicting process
-2. Or change port in `app.py`: `app.run(port=5001)`
-
-### AI Model Download Issues
-```
-Error loading sentence transformer model
-```
-**Solution**:
-1. Check internet connection
-2. Manually download: `pip install sentence-transformers`
-3. The app will still work with reduced accuracy
-
-### File Upload Fails
-```
-File type not allowed
-```
-**Solution**:
-- Only PDF, DOC, and DOCX files are supported
-- Maximum file size: 16MB
-- Ensure files are not corrupted
-
-### CASCADE DELETE Not Working
-```
-Orphaned records in resume_data/analysis_results/red_flags tables
-```
-**Solution**:
-1. Check table engine: `SELECT TABLE_NAME, ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'resume_filter_db'`
-2. If tables are MyISAM (doesn't support foreign keys), convert to InnoDB:
-   ```powershell
-   python convert_to_innodb.py
-   ```
-3. Apply CASCADE constraints:
-   ```powershell
-   python force_cascade_fix.py
-   ```
-4. Verify constraints: Check output shows "DELETE: CASCADE" for all foreign keys
-
-## 📂 Project Structure
-
-```
-AI Resume Filter/
-├── app.py                      # Main Flask application
-├── config.py                   # Configuration settings
-├── requirements.txt            # Python dependencies
-├── database_schema.sql         # Database structure
-├── .env                        # Environment variables (create this)
-├── .env.example               # Environment template
-├── README.md                  # This file
-├── app/
-│   ├── __init__.py            # Package initializer
-│   ├── database.py            # Database utilities
-│   ├── resume_parser.py       # Resume parsing logic
-│   ├── job_matcher.py         # Matching algorithm
-│   ├── red_flag_detector.py   # Red flag detection
-│   ├── fix_encoding.py        # UTF8MB4 encoding fix
-│   ├── templates/             # HTML templates
-│   │   ├── base.html          # Base template with navigation
-│   │   ├── index.html         # Dashboard
-│   │   ├── create_job.html    # Job creation page
-│   │   ├── upload.html        # Resume upload
-│   │   ├── candidates.html    # Candidate list
-│   │   ├── candidate_detail.html  # Detailed view
-│   │   └── jobs.html          # Job listings
-│   └── static/                # CSS and assets
-├── uploads/                   # Uploaded resume storage
-├── fix_cascade.py             # CASCADE DELETE fix script
-└── check_cascade.py           # Verify CASCADE constraints
-```
-
-## 🔐 Security Notes
-
-1. **Change the secret key** in `.env` before production
-2. **Use strong MySQL passwords**
-3. **Don't commit `.env` file** to version control
-4. **Enable HTTPS** in production
-5. **Limit file upload sizes** (currently 16MB)
-6. **Validate all user inputs**
-7. **CASCADE DELETE** ensures data integrity - deleting a job or candidate removes all related records
-8. **Uploaded files** are stored in `uploads/` and deleted when candidates are removed
-
-## 🎨 Customization
-
-### Change Matching Weights
-Edit `app/job_matcher.py`:
-```python
-weights = {
-    'semantic_similarity': 0.30,  # Adjust these
-    'keyword_match': 0.25,
-    'skill_match': 0.30,
-    'experience_match': 0.15
-}
-```
-
-### Modify Tier Thresholds
-Edit `_determine_tier` method in `app/job_matcher.py`:
-```python
-if score >= 80:  # Change threshold
-    return "Top Tier"
-```
-
-### Add More Skills
-Edit `_extract_skills` method in `app/resume_parser.py`
-
-## 📞 Support
-
-If you encounter any issues:
-1. Check the troubleshooting section above
-2. Verify all prerequisites are met
-3. Ensure database is properly configured
-4. Check Python and MySQL logs for errors
-
-## 🚀 Next Steps
-
-After setup:
-1. Test with sample resumes
-2. Upload a real job description
-3. Review the matching algorithm performance
-4. Adjust weights if needed
-5. Customize UI colors/branding (in templates)
+# AI Resume Filter — Multi-Agent Resume Screening
+
+> A multi-agent resume screening platform that parses resumes, scores them against job descriptions using **transformer embeddings + hybrid keyword/fuzzy matching**, ranks and tiers candidates, and lets HR query the candidate pool in natural language via a built-in **RAG-style chatbot**.
+
+[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Flask-3.0-black.svg)](https://flask.palletsprojects.com/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1.svg)](https://www.mysql.com/)
+[![Sentence-Transformers](https://img.shields.io/badge/Sentence--Transformers-3.0-yellow.svg)](https://www.sbert.net/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](#license)
 
 ---
 
-**Congratulations! Your AI Resume Filter is ready to use! 🎉**
+## Why this exists
+
+Recruiters spend hours skimming hundreds of resumes per opening. This system replaces the first-pass triage with a transparent, explainable scoring pipeline — and gives HR a chat interface to ask follow-up questions like *"show me senior Python candidates with LangChain experience"* without opening a single PDF.
+
+Runs **fully offline** — no resumes leave your machine.
+
+## Highlights
+
+- 🤖 **5-agent pipeline** — Resume Parser, Skills Assessment, Semantic Matching, Red Flag Detection, Ranking Orchestrator
+- 💬 **RAG-style chatbot** — natural-language candidate filtering with role-intent mapping (e.g. *"DevOps"* → Docker, Kubernetes, Jenkins, Terraform)
+- 🧠 **Hybrid scoring** — Semantic 30% + Keywords 25% + Skills 30% + Experience 15%, weights tunable per role
+- 🔢 **384-dim transformer embeddings** (`all-MiniLM-L6-v2`) + FuzzyWuzzy/Levenshtein (80% threshold)
+- 🗂️ **Admin console** — manage 200+ skills, 70+ aliases, 12 role profiles without code changes
+- 📥 **Dual-mode ingestion** — JD-targeted matching *and* JD-less bulk auto-profiling against role templates
+- 📄 **PDF + DOCX** parsing via spaCy NER + PyPDF2 + python-docx
+- 🔒 **Offline by design** — no external API calls; all inference local
+
+## Screenshots
+
+| Dashboard | Bulk Upload | Candidate Analysis |
+|---|---|---|
+| ![Dashboard](Dashboard.png) | ![Bulk upload](bulk_upload.png) | ![Candidate analysis](candidate_analysis.png) |
+
+| Chatbot | Agent Monitoring | All Jobs |
+|---|---|---|
+| ![Chatbot](Chatbot.png) | ![Agent monitoring](AgentMonitoring.png) | ![All jobs](AllJobs.png) |
+
+## Architecture
+
+```
+┌──────────────────────────┐    ┌─────────────────────────────────────┐
+│  Flask UI + Chatbot      │───▶│  Ranking Orchestrator                │
+│  (PDF/DOCX uploads)      │    │   ├─ Resume Parser Agent             │
+└──────────────────────────┘    │   ├─ Skills Assessment Agent         │
+                                │   ├─ Semantic Matching Agent (SBERT) │
+                                │   └─ Red Flag Detection Agent        │
+                                └────────────────┬────────────────────┘
+                                                 │
+                                ┌────────────────┴───────────────────┐
+                                ▼                                    ▼
+                       ┌────────────────┐                 ┌──────────────────┐
+                       │  MySQL         │                 │  Skill catalog   │
+                       │  (resumes,     │                 │  + role profiles │
+                       │   scores, JDs) │                 │  (admin-managed) │
+                       └────────────────┘                 └──────────────────┘
+```
+
+See [`MULTI_AGENT_ARCHITECTURE.md`](MULTI_AGENT_ARCHITECTURE.md) for full detail.
+
+## RAG chatbot — supported query types
+
+| # | Type | Example |
+|---|---|---|
+| 1 | Count | *"How many DevOps candidates do we have?"* |
+| 2 | Comparison | *"Compare candidate A vs candidate B for the AI Lead role"* |
+| 3 | Profile | *"Show me Ravi's full profile"* |
+| 4 | Recommendation | *"Top 5 for the data engineer JD"* |
+| 5 | Listing | *"List all candidates with Snowflake + dbt"* |
+| 6 | Search | *"Anyone with FinTech background and Python?"* |
+| 7 | Greetings | conversational |
+| 8 | Help | feature discovery |
+
+## Quickstart
+
+### Prerequisites
+- Python 3.8+
+- MySQL 5.7+ (8.0 recommended)
+- ~2 GB free RAM (transformer model)
+- First-run internet access (downloads `all-MiniLM-L6-v2` and `en_core_web_sm`)
+
+### Install
+```powershell
+git clone https://github.com/ajay-fitbit/AI-Resume-Filter.git
+cd AI-Resume-Filter
+
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+python -m spacy download en_core_web_sm
+
+Copy-Item .env.example .env
+# Edit .env with your MySQL credentials
+```
+
+### Initialise the database
+```powershell
+Get-Content database_schema.sql        | mysql -u root -p
+Get-Content database_admin_tables.sql  | mysql -u root -p
+Get-Content insert_hardcoded_data.sql  | mysql -u root -p   # 200+ skills, 70+ aliases, 12 roles
+```
+
+### Run
+```powershell
+python app.py
+# open http://localhost:5000
+```
+
+Full step-by-step setup is in [`QUICKSTART.md`](QUICKSTART.md).
+
+## Configuration
+
+| Var | Purpose | Example |
+|---|---|---|
+| `DB_HOST` | MySQL host | `localhost` |
+| `DB_USER` | MySQL user | `root` |
+| `DB_PASSWORD` | MySQL password | `***` |
+| `DB_NAME` | Database name | `resume_filter_db` |
+| `FLASK_SECRET_KEY` | Flask session secret | random string |
+| `FLASK_ENV` | `development` / `production` | `development` |
+
+## Built-in role profiles (12)
+
+Full-Stack · DevOps · Data Scientist · Cloud Architect · AI/ML · BI · Backend · Frontend · Mobile · QA · Security · PM
+(All editable via the admin console — no code change required.)
+
+## Documentation
+
+- [`QUICKSTART.md`](QUICKSTART.md) — setup walkthrough
+- [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) — code layout
+- [`ADMIN_SYSTEM_SUMMARY.md`](ADMIN_SYSTEM_SUMMARY.md) — admin console
+- `MULTI_AGENT_ARCHITECTURE.md` — agent design (linked from header)
+- `RAG_INTEGRATION_GUIDE.md` — vector-DB upgrade path
+
+## Security & responsible use
+
+- **Local-first** — embeddings, parsing, and matching run on-machine; no resume data sent to third parties
+- **PII-aware** — admin should restrict UI access; contact details are not used as ranking signals
+- **Bias-aware design** — scoring uses skills/experience only; demographic-correlated terms are not weighted
+- **Explainable** — every score is broken down into the 4 sub-scores; chatbot answers cite which fields matched
+- **No hard-coded credentials** — all via `.env` (gitignored)
+
+## Roadmap
+
+- [ ] Move to **Azure AI Search** for vector storage (current: SBERT + in-process)
+- [ ] **PII redaction** (Azure AI Language / Presidio) before any LLM call
+- [ ] **Bias regression suite** — name-swap stability test
+- [ ] **LoRA-fine-tuned red-flag classifier** (DistilBERT)
+- [ ] **MCP wrapper** — expose the agents as MCP tools so external assistants can drive the pipeline
+- [ ] **Foundry deployment** — containerised on Azure Container Apps
+
+## Related projects
+
+- [`MCP`](https://github.com/ajay-fitbit/MCP) — Python MCP server for SQL Server (paired tooling for the planned MCP wrapper above)
+- [`CLR-Project`](https://github.com/ajay-fitbit/CLR-Project) — SQL Server CLR helper
+
+## Tech stack
+
+`Python 3.8+` · `Flask 3.0` · `MySQL 8` · `Sentence-Transformers (all-MiniLM-L6-v2)` · `spaCy (en_core_web_sm)` · `PyPDF2` · `python-docx` · `FuzzyWuzzy + python-Levenshtein` · `scikit-learn` · `pandas`
+
+## Author
+
+**Ajay Singh** — Solutions Architect · agentic AI · MCP · LLM applications
+[Portfolio](https://www.itshitechs.com/portfolio/) · [LinkedIn](https://www.linkedin.com/in/ajay-singh-ab40082/) · [GitHub](https://github.com/ajay-fitbit)
+
+## License
+
+MIT
